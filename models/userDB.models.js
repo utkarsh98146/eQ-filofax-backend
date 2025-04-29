@@ -42,6 +42,22 @@ export const User = sequelize.define('User', {
             }
         }
     },
+    phoneNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: {
+            notEmpty: {
+                msg: 'Phone number must required'
+            },
+            isNumeric: {
+                msg: 'Phone number must be numeric'
+            },
+            len: {
+                args: [10, 15],
+                msg: 'Phone number must be between 10 and 15 digits'
+            }
+        }
+    },
     role: {
         type: DataTypes.ENUM('invitee', 'admin'),
         defaultValue: 'admin',
