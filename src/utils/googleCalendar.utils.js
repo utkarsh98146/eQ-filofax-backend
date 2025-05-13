@@ -21,8 +21,9 @@ export const getOAuth2Client = (acess_token, refresh_token) => {
   )
   oauth2Client.setCredentials({
     // this is the part that sets the credentials for the OAuth2 client and must be after redirect url called
-    access_token: acess_token,
-    refresh_token: refresh_token,
+
+    access_token: acess_token, // this is the part that sets the access token for the OAuth2 client
+    refresh_token: refresh_token, // this is the part that sets the refresh token for the OAuth2 client
   })
   return oauth2Client
 }
