@@ -6,6 +6,7 @@ import "../config/passport.config.js" // passport configuration
 import { generateToken } from "../services/tokenServices.service.js"
 import db from "../models/index.model.js"
 import { where } from "sequelize"
+import { getOAuth2Client, scopes } from "../utils/googleCalendar.utils.js"
 
 const router = express.Router()
 dotenv.config()
@@ -15,10 +16,18 @@ dotenv.config()
 router.get(
   "/google",
   passport.authenticate("google", {
-    scope: ["profile", "email"],
+    scope: scopes,
     accessType: "offline",
     prompt: "consent",
-  })
+  }),
+  (req, res) => {
+    // The request will be redirected to Google for authentication
+    // If authentication is successful, the user will be redirected to the callback URL
+    console.log(
+      "Google authentication initiated and now redirecting to callback url"
+    )
+    res.status(200).json({ message: "Redirecting to Google..." })
+  }
 )
 
 // router.get('/google', (req, res) => {
@@ -34,23 +43,33 @@ router.get(
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect:
-      process.env.GOOGLE_REDIRECT_URI ||
-      "https://filo-fax-frontend-wkdx.vercel.app",
+    failureRedirect: process.env.GOOGLE_REDIRECT_URI,
     session: false, // If you're using JWT not sessions
   }),
   async (req, res) => {
-    const { accessToken, refreshToken } = req.user
+    try {
+      const { accessToken, refreshToken } = req.user
 
-    // Save this into DB
-    await db.User.update(
-      { accessToken, refreshToken },
-      { where: { id: req.user.id } }
-    )
+      // Save this into DB
+      await db.User.update(
+        { accessToken, refreshToken },
+        { where: { id: req.user.id } }
+      )
 
-    const token = generateToken(req.user) // or req.user.token if already generated
-    const FRONTEND_URL = "https://filo-fax-frontend-wkdx.vercel.app"
-    res.redirect(`${FRONTEND_URL}/dashboard?token=${token}`)
+      // const token = generateToken(req.user) // or req.user.token if already generated
+      const FRONTEND_URL =
+        "http://localhost:5173" || "https://filo-fax-frontend-wkdx.vercel.app"
+      res.redirect(
+        `${FRONTEND_URL}/dashboard?access_token=${accessToken}&refresh_token=${refreshToken}`
+      )
+    } catch (error) {
+      console.error("Error during Google callback:", error)
+      res.status(500).json({
+        error: "Internal server error",
+        success: false,
+        error: error.message,
+      })
+    }
   }
 )
 

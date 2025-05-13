@@ -1,7 +1,7 @@
 // Save/merge user data after oAuth
 import db from "../models/index.model.js"
 
-export const handleOAuthUser = async (profile, platform) => {
+export const handleOAuthUser = async (profile, provider) => {
   try {
     const email = profile.emails?.[0]?.value // first email from profile(userData)
     const name = profile.displayName // user name
@@ -11,24 +11,24 @@ export const handleOAuthUser = async (profile, platform) => {
 
     let user
 
-    // check if user already exists based on Platform Id
-    if (platform === "google") {
+    // check if user already exists based on provider Id
+    if (provider === "google") {
       user = await db.User.findOne({
         where: { googleId: profile.id },
       })
-    } else if (platform === "microsoft") {
+    } else if (provider === "microsoft") {
       user = await db.User.findOne({
         where: { microsoftId: profile.id },
       })
     }
 
     if (user) {
-      if (platform === "google" && !user.googleId) {
+      if (provider === "google" && !user.googleId) {
         user.googleId = profile.id
         ;(user.authType = "google"), (user.googleAccessToken = accessToken)
         user.googleRefreshToken = refreshToken
       }
-      if (platform === "microsoft" && !user.microsoftId) {
+      if (provider === "microsoft" && !user.microsoftId) {
         user.microsoftId = profile.id
         user.authType = "microsoft"
         user.microsoftAccessToken = accessToken
@@ -37,6 +37,7 @@ export const handleOAuthUser = async (profile, platform) => {
       await user.save()
       return user
     }
+
     // if user not found, create a new user
     if (!user) {
       const userData = {
@@ -45,14 +46,14 @@ export const handleOAuthUser = async (profile, platform) => {
         profileImageLink: profileImageLink,
         isEmailVerified: true,
         lastLogin: new Date(),
-        lastLoginMethod: platform,
+        lastLoginMethod: provider,
       }
 
-      if (platform === "google") {
+      if (provider === "google") {
         userData.googleId = profile.id
         userData.googleAccessToken = accessToken
         userData.googleRefreshToken = refreshToken
-      } else if (platform === "microsoft") {
+      } else if (provider === "microsoft") {
         userData.microsoftId = profile.id
         userData.microsoftAccessToken = accessToken
         userData.microsoftRefreshToken = refreshToken
@@ -63,8 +64,12 @@ export const handleOAuthUser = async (profile, platform) => {
 
     // update last login data
     user.lastLogin = new Date()
-    user.lastLoginMethod = platform
+    user.lastLoginMethod = provider
     await user.save()
+    console.log(
+      "User data saved successfully with handleOAuthUser middleware logic and saved user data:",
+      user
+    )
     return user
   } catch (error) {
     console.error("Error handling OAuth user:", error)

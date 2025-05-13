@@ -11,11 +11,14 @@ dotenv.config()
 
 export const sendToken = (req, res) => {
   const user = req.user // getting the user details from token(browser)
+
   const token = generateToken(user) // generating refresh token via userId
   // console.log('Token generated:', token)
   // console.log(`Frontend URL: ${process.env.FRONTEND_BASE_URL}/dashboard?token=${token}`)
   res
-  res.redirect(`${"https://filo-fax-frontend-wkdx.vercel.app"}?token=${token}`) // dashboard url from client/
+  res.redirect(
+    `"http://localhost:5173"||${"https://filo-fax-frontend-wkdx.vercel.app"}/dashboard?token=${token}`
+  ) // dashboard url from client/
 }
 
 export const signup = async (req, res) => {

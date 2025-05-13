@@ -25,18 +25,22 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_REDIRECT_URI,
+      passReqToCallback: true, // This is used to pass the request object to the callback function
 
       scope: ["profile", "email", "https://www.googleapis.com/auth/calendar"], // The scope of the access request. This determines what information you can access from the user's account.
 
       accessType: "offline", // This is used to request a refresh token. If you don't need offline access, you can remove this line.
     },
-    async (accessToken, refreshToken, profile, done) => {
+    async (req, accessToken, refreshToken, profile, done) => {
       // This function is called when the user is authenticated
       try {
         // The profile object contains the user information returned by Google
         console.log("User Profile: ", profile)
 
         // let user =await db.User.findOne({where:{googleId:profile.id}})
+        console.log("✅ Access Token:", accessToken)
+        console.log("🔁 Refresh Token:", refreshToken)
+        console.log("🙋 User Profile:", profile)
 
         profile.accessToken = accessToken // save the access token in the profile object
         profile.refreshToken = refreshToken // save the refresh token in the profile object
@@ -46,8 +50,11 @@ passport.use(
 
         // Here you can save the user information to your database
 
+        console.log("Passport logic working fine and user details :", user)
+
         return done(null, user) //  user is the user information returned by Google,we can use it to create a new user in our database
       } catch (error) {
+        console.error("Error in Google OAuth: ", error.message)
         return done(error, null)
       }
     }
