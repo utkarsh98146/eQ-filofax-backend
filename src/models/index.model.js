@@ -1,0 +1,29 @@
+import { Sequelize } from "sequelize"
+import { sequelize } from "../config/database.config.js"
+import UserModel from "./user.model.js"
+import AvailabilityModel from "./availability.model.js"
+import TimeSlotModel from "./timeSlot.model.js"
+import CalendarEvent from "./calendarEvent.model.js"
+
+const db = {}
+
+db.sequelize = sequelize
+db.Sequelize = Sequelize
+
+// initialize all the models
+
+db.User = UserModel(sequelize, Sequelize.DataTypes)
+db.Availability = AvailabilityModel(sequelize, Sequelize.DataTypes)
+db.CalendarEvent = CalendarEvent(sequelize, Sequelize.DataTypes)
+db.TimeSlot = TimeSlotModel(sequelize, Sequelize.DataTypes)
+
+db.User.hasMany(db.Availability, { foreignKey: "userId" })
+db.Availability.belongsTo(db.User, { foreignKey: "userId" })
+
+db.Availability.hasMany(db.TimeSlot, { foreignKey: "availabilityId" })
+db.TimeSlot.belongsTo(db.Availability, { foreignKey: "availabilityId" })
+
+db.TimeSlot.hasOne(db.CalendarEvent, { foreignKey: "timeSlotId" })
+db.CalendarEvent.belongsTo(db.TimeSlot, { foreignKey: "timeSlotId" })
+
+export default db
