@@ -11,7 +11,21 @@ import { getOAuth2Client, scopes } from "../utils/googleCalendar.utils.js"
 const router = express.Router()
 dotenv.config()
 
+/* Local Signup/Login routes */
+router.post("/local-signUp", signup)
+router.post("/local-login", login)
+
 /* when google button click it work*/
+
+// router.get('/google', (req, res) => {
+//     const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&scope=profile`;
+//     // const source = req.query.source || 'web'; // Default to 'web' if no source is provided
+//     // const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=email%20profile%20openid&prompt=select_account&state=${source}`;
+
+//     res.status(200).json({ redirectUrl: googleAuthUrl });
+// });
+
+// router.get('/google/callback', passport.authenticate("google", { session: false }), sendToken)
 
 router.get(
   "/google",
@@ -29,17 +43,6 @@ router.get(
     res.status(200).json({ message: "Redirecting to Google..." })
   }
 )
-
-// router.get('/google', (req, res) => {
-//     const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&scope=profile`;
-//     // const source = req.query.source || 'web'; // Default to 'web' if no source is provided
-//     // const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=email%20profile%20openid&prompt=select_account&state=${source}`;
-
-//     res.status(200).json({ redirectUrl: googleAuthUrl });
-// });
-
-// router.get('/google/callback', passport.authenticate("google", { session: false }), sendToken)
-
 router.get(
   "/google/callback",
   passport.authenticate("google", {
@@ -50,6 +53,9 @@ router.get(
     try {
       const { accessToken, refreshToken } = req.user
 
+      console.log("Access Token:", accessToken)
+      console.log("Refresh Token:", refreshToken)
+      console.log("The details from the req.user : ", req.user)
       // Save this into DB
       await db.User.update(
         { accessToken, refreshToken },
@@ -58,7 +64,9 @@ router.get(
 
       // const token = generateToken(req.user) // or req.user.token if already generated
       const FRONTEND_URL =
-        "http://localhost:5173" || "https://filo-fax-frontend-wkdx.vercel.app"
+        process.env.FRONTEND_URL ||
+        "http://localhost:5173" ||
+        "https://filo-fax-frontend-wkdx.vercel.app"
       res.redirect(
         `${FRONTEND_URL}/dashboard?access_token=${accessToken}&refresh_token=${refreshToken}`
       )
@@ -78,14 +86,16 @@ router.get("/microsoft", passport.authenticate("microsoft"))
 router.get(
   "/microsoft/callback",
   passport.authenticate("microsoft", {
-    failureRedirect:
-      process.env.MICROSOFT_REDIRECT_URI ||
-      "https://filo-fax-frontend-wkdx.vercel.app",
+    failureRedirect: process.env.MICROSOFT_REDIRECT_URI,
+    // || "https://filo-fax-frontend-wkdx.vercel.app"
     session: false, // If you're using JWT not sessions
   }),
   async (req, res) => {
     const token = generateToken(req.user) // or req.user.token if already generated
-    const FRONTEND_URL = "https://filo-fax-frontend-wkdx.vercel.app"
+    const FRONTEND_URL =
+      process.env.FRONTEND_URL ||
+      "http://localhost:5173" ||
+      "https://filo-fax-frontend-wkdx.vercel.app"
     res.redirect(`${FRONTEND_URL}/dashboard?token=${token}`)
   }
 )
@@ -107,8 +117,5 @@ router.get(
     }
 );
 */
-
-router.post("/local-signUp", signup)
-router.post("/local-login", login)
 
 export const authRouter = router

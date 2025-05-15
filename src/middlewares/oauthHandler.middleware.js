@@ -8,6 +8,14 @@ export const handleOAuthUser = async (profile, provider) => {
     const profileImageLink = profile.photos?.[0]?.value // profile image url
     const accessToken = profile.accessToken // access token
     const refreshToken = profile.refreshToken // refresh token
+    console.log(
+      "In starting wth handleOAuthHandler access token when value assign in google auth ",
+      accessToken
+    )
+    console.log(
+      "In starting wth handleOAuthHandler refresh token when value assign in google auth ",
+      refreshToken
+    )
 
     let user
 
@@ -23,12 +31,24 @@ export const handleOAuthUser = async (profile, provider) => {
     }
 
     if (user) {
-      if (provider === "google" && !user.googleId) {
+      // if (provider === "google" && !user.googleId) {
+      if (provider === "google") {
         user.googleId = profile.id
-        ;(user.authType = "google"), (user.googleAccessToken = accessToken)
+        user.authType = "google"
+        console.log(
+          "Aceess token when value assign in google auth ",
+          accessToken
+        )
+        console.log(
+          "Refresh token when value assign in google auth ",
+          refreshToken
+        )
+
+        user.googleAccessToken = accessToken
         user.googleRefreshToken = refreshToken
       }
-      if (provider === "microsoft" && !user.microsoftId) {
+      // if (provider === "microsoft" && !user.microsoftId) {
+      if (provider === "microsoft") {
         user.microsoftId = profile.id
         user.authType = "microsoft"
         user.microsoftAccessToken = accessToken

@@ -80,6 +80,10 @@ export default (sequelize, DataTypes) => {
       microsoftAccessToken: DataTypes.STRING,
       microsoftRefreshToken: DataTypes.STRING,
 
+      accessToken: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
       refreshToken: {
         type: DataTypes.TEXT,
         allowNull: true,

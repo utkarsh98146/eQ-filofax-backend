@@ -59,7 +59,7 @@ export const signup = async (req, res) => {
 
     res.cookie("access_token", token, {
       httpOnly: true,
-      sameSite: "Strict",
+      sameSite: "Lax",
     })
     console.log("Local signup successfully..")
     res.status(201).json({
