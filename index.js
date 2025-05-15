@@ -4,13 +4,14 @@ import dotenv from "dotenv"
 import cookieParser from "cookie-parser"
 import session from "express-session"
 import passport from "passport"
-import { authRouter } from "./src/routers/auth.routes.js"
+
 import "./src/config/passport.config.js"
 import { welcomeRouter } from "./src/routers/welcome.routes.js"
 import { calendarEventRouter } from "./src/routers/calendarEvent.routes.js"
 import db from "./src/models/index.model.js"
 import { verifyToken } from "./src/middlewares/verifyToken.middleware.js"
 import { profileRouter } from "./src/routers/profile.routes.js"
+import { authRouter } from "./src/routers/auth.routes.js"
 
 dotenv.config()
 

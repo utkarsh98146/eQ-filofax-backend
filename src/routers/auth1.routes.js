@@ -38,19 +38,17 @@ router.get(
     scope: scopes,
     accessType: "offline",
     prompt: "consent",
-  })
-  /*
-    (req, res) => {
-      // The request will be redirected to Google for authentication
-      // If authentication is successful, the user will be redirected to the callback URL
+  }),
+  (req, res) => {
+    // The request will be redirected to Google for authentication
+    // If authentication is successful, the user will be redirected to the callback URL
 
-      console.log(
-        "Google authentication initiated and now redirecting to callback url"
-      )
-      res.status(200).json({ message: "Redirecting to Google..." })
-    }*/
+    console.log(
+      "Google authentication initiated and now redirecting to callback url"
+    )
+    res.status(200).json({ message: "Redirecting to Google..." })
+  }
 )
-
 router.get(
   "/google/callback",
   passport.authenticate("google", {
@@ -59,14 +57,14 @@ router.get(
   }),
   async (req, res) => {
     try {
-      const { googleAccessToken, googleRefreshToken } = req.user
+      const { accessToken, refreshToken } = req.user
 
-      console.log("Access Token:", googleAccessToken)
-      console.log("Refresh Token:", googleRefreshToken)
+      console.log("Access Token:", accessToken)
+      console.log("Refresh Token:", refreshToken)
       console.log("The details from the req.user : ", req.user)
       // Save this into DB
       await db.User.update(
-        { googleAccessToken, googleRefreshToken },
+        { accessToken, refreshToken },
         { where: { id: req.user.id } }
       )
 
@@ -75,17 +73,9 @@ router.get(
         process.env.FRONTEND_URL ||
         "http://localhost:5173" ||
         "https://filo-fax-frontend-wkdx.vercel.app"
-      // res.redirect(
-      //   `${FRONTEND_URL}/dashboard?access_token=${googleAccessToken}&refresh_token=${googleRefreshToken}`
-      // )
-      const token = generateToken(req.user)
-      if (token || googleAccessToken || googleRefreshToken) {
-        res.redirect(
-          `${FRONTEND_URL}/dashboard?token=${token || ""}&access_token=${googleAccessToken || ""}&refresh_token=${googleRefreshToken || ""}`
-        )
-      } else {
-        res.redirect(`${FRONTEND_URL}/login?error=missing_tokens`)
-      }
+      res.redirect(
+        `${FRONTEND_URL}/dashboard?access_token=${accessToken}&refresh_token=${refreshToken}`
+      )
     } catch (error) {
       console.error("Error during Google callback:", error)
       res.status(500).json({

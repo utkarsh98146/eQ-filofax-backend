@@ -16,9 +16,10 @@ export const sendToken = (req, res) => {
   // console.log('Token generated:', token)
   // console.log(`Frontend URL: ${process.env.FRONTEND_BASE_URL}/dashboard?token=${token}`)
   res
-  res.redirect(
-    `"http://localhost:5173"||${"https://filo-fax-frontend-wkdx.vercel.app"}/dashboard?token=${token}`
-  ) // dashboard url from client/
+  // res.redirect(
+  //   `"http://localhost:5173"||${"https://filo-fax-frontend-wkdx.vercel.app"}/dashboard?token=${token}`
+  // ) // dashboard url from client/
+  res.redirect(`${"http://localhost:5173"}/dashboard?token=${token}`) // dashboard url from client/
 }
 
 export const signup = async (req, res) => {

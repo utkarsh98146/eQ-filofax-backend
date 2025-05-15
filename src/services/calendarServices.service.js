@@ -115,25 +115,26 @@ export const updateEventService = async (eventId, data) => {
     })
   }
   return updatedEvent
-
-  // await calendar.events.patch({
-  //   calendarId: "primary",
-  //   eventId: event.eventId,
-  //   resource: {
-  //     summary: data.title,
-  //     description: data.description,
-  //     start: {
-  //       dateTime: data.startDate,
-  //       timeZone: data.hostTimeZone || "Asia/Kolkata",
-  //     },
-  //     end: {
-  //       dateTime: data.endDate,
-  //       timeZone: data.hostTimeZone || "Asia/Kolkata",
-  //     },
-  //   },
-  // })
-  // await event.update(data)
-  // return event
+  /*
+  await calendar.events.patch({
+    calendarId: "primary",
+    eventId: event.eventId,
+    resource: {
+      summary: data.title,
+      description: data.description,
+      start: {
+        dateTime: data.startDate,
+        timeZone: data.hostTimeZone || "Asia/Kolkata",
+      },
+      end: {
+        dateTime: data.endDate,
+        timeZone: data.hostTimeZone || "Asia/Kolkata",
+      },
+    },
+  })
+  await event.update(data)
+  return event
+  */
 }
 
 // delete event service

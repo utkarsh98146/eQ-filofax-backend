@@ -112,39 +112,3 @@ passport.use(
     }
   )
 )
-
-// Azure AD OIDC strategy
-/*
-passport.use(
-    new OIDCStrategy(
-        {
-            identityMetadata: "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
-            clientID: process.env.MICROSOFT_CLIENT_ID,
-            clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
-            responseType: "code",
-            responseMode: "query",
-            redirectUrl: process.env.MICROSOFT_REDIRECT_URI,
-            allowHttpForRedirectUrl: false,
-            scope: ["profile", "email", "User.Read", "https://graph.microsoft.com/Calendars.ReadWrite"],
-            passReqToCallback: false,
-        },
-        async (iss, sub, profile, accessToken, refreshToken, done) => {
-            try {
-
-                profile.accessToken = accessToken // save the access token in the profile object
-
-                profile.refreshToken = refreshToken // save the refresh token in the profile object
-
-
-                const user = await handleOAuthUser(profile, 'microsoft')
-
-                return done(null, user)
-            } catch (error) {
-                return done(error)
-            }
-
-            // return done(null, { profile, accessToken });
-        }
-    )
-);
-*/
