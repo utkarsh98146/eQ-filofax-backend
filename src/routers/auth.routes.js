@@ -79,11 +79,22 @@ router.get(
       //   `${FRONTEND_URL}/dashboard?access_token=${googleAccessToken}&refresh_token=${googleRefreshToken}`
       // )
       const token = generateToken(req.user)
+
       if (token || googleAccessToken || googleRefreshToken) {
+        console.log("Token when enter in if block for redirect : ", token)
+
+        console.log("Access Token:", googleAccessToken)
+        console.log("Refresh Token:", googleRefreshToken)
+        console.log(
+          "in the google/callback the token condition verifys now dashboard open"
+        )
         res.redirect(
           `${FRONTEND_URL}/dashboard?token=${token || ""}&access_token=${googleAccessToken || ""}&refresh_token=${googleRefreshToken || ""}`
         )
       } else {
+        console.log(
+          "in the google/callback the token condition fails now login open"
+        )
         res.redirect(`${FRONTEND_URL}/login?error=missing_tokens`)
       }
     } catch (error) {
