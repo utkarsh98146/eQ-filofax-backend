@@ -12,6 +12,7 @@ import db from "./src/models/index.model.js"
 import { verifyToken } from "./src/middlewares/verifyToken.middleware.js"
 import { profileRouter } from "./src/routers/profile.routes.js"
 import { authRouter } from "./src/routers/auth.routes.js"
+import { zoomApiConfig } from "./src/config/zoomApi.config.js"
 
 dotenv.config()
 
@@ -72,6 +73,7 @@ app.listen(PORT, (req, res) => {
   console.log(`Server started at http://localhost:${PORT}`)
 })
 
+zoomApiConfig() // call the zoom api config function
 db.sequelize
   .sync({ alter: true })
   .then(() => {
