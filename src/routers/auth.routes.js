@@ -3,7 +3,7 @@ import passport from "passport"
 import { login, sendToken, signup } from "../controllers/auth.controller.js"
 import dotenv from "dotenv"
 import "../config/passport.config.js" // passport configuration
-import { generateToken } from "../services/tokenServices.service.js"
+import { generateToken } from "../services/jwt_tokenServices.service.js"
 import db from "../models/index.model.js"
 import { where } from "sequelize"
 import { getOAuth2Client, scopes } from "../utils/googleCalendar.utils.js"

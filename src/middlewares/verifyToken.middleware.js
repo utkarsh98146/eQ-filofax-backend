@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
-import { decodeToken } from "../services/tokenServices.service.js"
+import { decodeToken } from "../services/jwt_tokenServices.service.js"
 
 dotenv.config()
 
