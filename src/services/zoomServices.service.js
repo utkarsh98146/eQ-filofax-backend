@@ -1,21 +1,32 @@
-import { generateZoomToken } from "../utils/generateZoomToken.utils"
+import { zoomApiConfig } from "../config/zoomApi.config.js"
+import db from "../models/index.model.js"
+import { generateZoomHeader } from "../utils/generateZoomToken.utils.js"
+import axios from "axios"
 
-export const createZoomMeeting = async (data) => {
+const { zoomAccountId } = zoomApiConfig()
+
+const ZOOM_BASE_URL = "https://api.zoom.us/v2"
+
+// console.log("The zoom base url is :", ZOOM_BASE_URL)
+
+// create zoom meeting service
+export const createZoomMeetingService = async (data) => {
   try {
-    const zoomToken = await generateZoomToken() // Generate the Zoom access_token
+    const headers = await generateZoomHeader() // Generate the authorization headers for the Zoom API
 
+    console.log("The headers are :", headers)
     const now = new Date() // Get the current date and time
 
-    const startTime = new Date(now.getTime() + 5 * 60 * 1000) // Set the start time to 5 minutes from now
+    // const startTime = new Date(now.getTime() + 5 * 60 * 1000) // Set the start time to 5 minutes from now
 
     const meetingData = {
-      topic: data.title,
+      agenda: data.topic || "New meeting", // Meeting topic
       type: 2, // Scheduled meeting
-      start_time: startTime.toISOString(), // Set the start time in ISO format
+      start_time: data.startTime.toISOString(), // Set the start time in ISO format
       duration: data.duration || 30, // Duration in minutes
       timezone: data.timezone || "Asia/Kolkata", // Set the timezone
       agenda: data.agenda || "New agenda", // Meeting agenda
-      password: data.password || "1234", // Meeting password`
+      password: data.password || "1234", // Meeting password
 
       settings: {
         host_video: true,
@@ -24,10 +35,10 @@ export const createZoomMeeting = async (data) => {
         mute_upon_entry: true,
         waiting_room: true,
         audio: "both",
-        contact_name: data.host_name || "Utkarsh",
-        contact_email: data.host_email || "subhashyadav.equasar@gmail.com",
+        contact_name: data.hostName || "Utkarsh",
+        contact_email: data.hostEmail || "subhashyadav.equasar@gmail.com",
         alternative_hosts:
-          data.alternative_hosts || "subhashyadav.eqausar@gmail.com",
+          data.alternative_hosts || "subhashyadav.equasar@gmail.com",
         email_reminder: true,
         email_reminder_time: 2,
         allow_multiple_devices: true,
@@ -36,8 +47,132 @@ export const createZoomMeeting = async (data) => {
         authentication_option: "none",
       },
     }
+
+    const response = await axios.post(
+      `${ZOOM_BASE_URL}/users/${zoomAccountId}/meetings`,
+      meetingData,
+      {
+        headers: headers,
+      }
+    )
+    // format end time based on start time and duration
+    const startTime = new Date(meetingData.start_time)
+    const endTime = new Date(
+      startTime.getTime() + meetingData.duration * 60 * 1000
+    )
+
+    // Save the meeting data to the database
+    const savedMeetingInDB = await db.ZoomMeeting.create({
+      id: response.data.id,
+      title: response.data.topic,
+      startTime: response.data.start_time,
+      endTime: endTime,
+      duration: response.data.duration,
+      eventType: meetingData.eventType,
+      location: "Zoom",
+      hostTimezone: response.data.timezone || "Asia/Kolkata",
+      agenda: response.data.agenda,
+      password: response.data.password,
+      hostId: meetingData.hostId,
+      hostName: meetingData.hostName || "Utkarsh",
+      hostEmail: meetingData.hostEmail || "subhashyadav.eqauasar@gmail.com",
+      joinUrl: response.data.join_url,
+      attendees: meetingData.attendees,
+      status: "scheduled",
+    })
+
+    // Return the created meeting data
+    return {
+      zoomMeetingDeatails: response.data, // Zoom meeting details
+      zoomMeetingDeatailsInDB: savedMeetingInDB, // Saved meeting details in the database
+    }
   } catch (error) {
-    console.error("Error creating Zoom meeting:", error)
+    console.error("Error creating Zoom meeting:", error.message)
     throw new Error("Failed to create Zoom meeting")
+  }
+}
+
+// get all zoom meetings
+export const getAllZoomMeetingsService = async () => {
+  try {
+    const headers = await generateZoomHeader() // Generate the authorization headers for the Zoom API
+    const response = await axios.get(
+      `${ZOOM_BASE_URL}/users/${zoomAccountId}/meetings`,
+      {
+        headers: headers,
+      }
+    )
+    return response.data.meetings // Return the response data
+    // return await db.ZoomMeeting.findAll()
+  } catch (error) {
+    console.error("Error fetching all Zoom meetings service:", error)
+    throw new Error("Failed to fetch all Zoom meetings")
+  }
+}
+
+// get zoom meeting by id
+export const getZoomMeetingById = async (meetingId) => {
+  try {
+    const headers = await generateZoomHeader() // Generate the authorization headers for the Zoom API
+    const response = await axios.get(`${ZOOM_BASE_URL}/meetings/${meetingId}`, {
+      headers: headers,
+    })
+    return response.data // Return the response data
+
+    // return await db.ZoomMeeting.findOne({ where: { id: meetingId } })
+  } catch (error) {
+    console.error(
+      "Error fetching Zoom meeting by ID in service:",
+      error.message
+    )
+    throw new Error("Failed to fetch Zoom meeting by ID in service")
+  }
+}
+// update zoom meetings
+export const updateZoomMeetingService = async (meetingData, meetingId) => {
+  try {
+    const headers = await generateZoomHeader() // Generate the authorization headers for the Zoom API
+
+    const response = await axios.patch(
+      `${ZOOM_BASE_URL}/meetings/${meetingId}`,
+      meetingData,
+      {
+        headers: headers,
+      }
+    )
+
+    // Update the meeting in the database
+    const updatedMeetingInDB = await db.ZoomMeeting.update(
+      { ...meetingData },
+      { where: { id: meetingId } }
+    )
+
+    return {
+      zoomMeetingDeatails: response.data, // Zoom meeting details
+      zoomMeetingDeatailsInDB: updatedMeetingInDB, // Updated meeting details in the database
+    }
+  } catch (error) {
+    console.error("Error updating Zoom meeting in service : ", error.message)
+    throw new Error("Failed to update Zoom meeting in service")
+  }
+}
+
+// delete zoom meeting by meetingId
+export const deleteZoomMeetingById = async (meetingId) => {
+  try {
+    const headers = await generateZoomHeader() // Generate the authorization headers for the Zoom API
+    const response = await axios.delete(
+      `${ZOOM_BASE_URL}/meetings/${meetingId}`,
+      {
+        headers: headers,
+      }
+    )
+    return response.data // Return the response data
+  } catch (error) {
+    console.error(
+      "Error deleting Zoom meeting by ID in service:",
+      error.message
+    )
+    throw new Error("Failed to delete Zoom meeting by ID in service")
   }
 }

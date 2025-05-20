@@ -13,6 +13,7 @@ import { verifyToken } from "./src/middlewares/verifyToken.middleware.js"
 import { profileRouter } from "./src/routers/profile.routes.js"
 import { authRouter } from "./src/routers/auth.routes.js"
 import { zoomApiConfig } from "./src/config/zoomApi.config.js"
+import { zoomMeetingRouter } from "./src/routers/zoomMeeting.routes.js"
 
 dotenv.config()
 
@@ -20,9 +21,9 @@ const app = express()
 
 const PORT = parseInt(process.env.SERVER_PORT, 10) || 3000
 
+//allow the frontend to access the backend
 app.use(
   cors({
-    //allow the frontend to access the backend
     origin: "http://localhost:5173",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -30,13 +31,14 @@ app.use(
     exposedHeaders: ["Set-Cookie"],
   })
 )
-
+// it enables the cross-origin resource sharing (CORS) for the server, allowing the frontend to access the backend
 app.use(express.urlencoded({ extended: true })) // parse the incoming reponse from form
 
 app.use(cookieParser()) // it parse the cookies from the browser
 
 app.use(express.json()) // it parse the json format
 
+// session configuration for passport
 app.use(
   session({
     secret: process.env.SECRET_KEY,
@@ -61,6 +63,8 @@ app.use(passport.session())
 app.use("/", welcomeRouter) // route for the welcome page
 
 app.use("/api/google-calendar", calendarEventRouter) // route for the google calendar event
+
+app.use("/api/zoom-meeting", zoomMeetingRouter) // route for the zoom meeting
 
 app.use("/api/auth", authRouter) // route for the auth(Login/SignUp)
 

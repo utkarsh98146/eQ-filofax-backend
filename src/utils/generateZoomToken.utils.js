@@ -15,7 +15,7 @@ const getAuthHeader = () => {
   )
   return {
     Authorization: `Basic ${encodedCredentials}`, // Set the authorization header with the encoded credentials
-    "Content-Type": "application/json",
+    "Content-Type": "application/x-www-form-urlencoded",
   }
 }
 
@@ -46,5 +46,13 @@ export const generateZoomToken = async () => {
   } catch (error) {
     console.error("Error generating Zoom token:", error)
     throw new Error("Failed to generate Zoom token")
+  }
+}
+
+export const generateZoomHeader = async () => {
+  const zoomAccessToken = await generateZoomToken()
+  return {
+    Authorization: `Bearer ${zoomAccessToken}`, // Set the authorization header with the access token
+    "Content-Type": "application/json",
   }
 }

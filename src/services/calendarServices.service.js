@@ -7,11 +7,11 @@ export const createCalendarEvent = async (data, calendar) => {
     summary: data.title,
     description: data.description,
     start: {
-      dateTime: data.startDate,
+      dateTime: data.startTime,
       timeZone: data.hostTimeZone || "Asia/Kolkata",
     },
     end: {
-      dateTime: data.endDate,
+      dateTime: data.endTime,
       timeZone: data.hostTimeZone || "Asia/Kolkata",
     },
     // attendees: data.attendees.map((email) => ({ email })),

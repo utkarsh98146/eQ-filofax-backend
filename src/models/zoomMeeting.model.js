@@ -1,15 +1,13 @@
-import { DataTypes } from "sequelize"
-
-export const zoomMeetingModel = (sequelize, DataTypes) => {
+export default (sequelize, DataTypes) => {
   const ZoomMeeting = sequelize.define(
     "ZoomMeeting",
     {
-      zoomMeetingId: {
+      id: {
         type: DataTypes.STRING,
         allowNull: false,
         primaryKey: true,
       },
-      topic: {
+      title: {
         type: DataTypes.STRING,
         allowNull: false,
       },
@@ -17,11 +15,23 @@ export const zoomMeetingModel = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: false,
       },
+      endTime: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
       duration: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      timezone: {
+      eventType: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      location: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      hostTimezone: {
         type: DataTypes.STRING,
         allowNull: false,
       },
@@ -37,6 +47,10 @@ export const zoomMeetingModel = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      hostName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       hostEmail: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -44,6 +58,10 @@ export const zoomMeetingModel = (sequelize, DataTypes) => {
       joinUrl: {
         type: DataTypes.STRING,
         allowNull: false,
+      },
+      attendees: {
+        type: DataTypes.JSON,
+        allowNull: true,
       },
       status: {
         type: DataTypes.STRING,
@@ -54,4 +72,5 @@ export const zoomMeetingModel = (sequelize, DataTypes) => {
       timestamps: true,
     }
   )
+  return ZoomMeeting
 }
