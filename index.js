@@ -4,7 +4,6 @@ import dotenv from "dotenv"
 import cookieParser from "cookie-parser"
 import session from "express-session"
 import passport from "passport"
-
 import "./src/config/passport.config.js"
 import { welcomeRouter } from "./src/routers/welcome.routes.js"
 import { calendarEventRouter } from "./src/routers/calendarEvent.routes.js"
@@ -14,6 +13,7 @@ import { profileRouter } from "./src/routers/profile.routes.js"
 import { authRouter } from "./src/routers/auth.routes.js"
 import { zoomApiConfig } from "./src/config/zoomApi.config.js"
 import { zoomMeetingRouter } from "./src/routers/zoomMeeting.routes.js"
+import { eventsOnDashboardRouter } from "./src/routers/eventsOnDashboard.routes.js"
 
 dotenv.config()
 
@@ -62,13 +62,15 @@ app.use(passport.session())
 
 app.use("/", welcomeRouter) // route for the welcome page
 
-app.use("/api/google-calendar", calendarEventRouter) // route for the google calendar event
-
-app.use("/api/zoom-meeting", zoomMeetingRouter) // route for the zoom meeting
-
 app.use("/api/auth", authRouter) // route for the auth(Login/SignUp)
 
 app.use("/api/profile", verifyToken, profileRouter) //  route for user profile
+
+app.use("/api/events", eventsOnDashboardRouter) // route for the events on the dashboard
+
+app.use("/api/google-calendar", calendarEventRouter) // route for the google calendar event
+
+app.use("/api/zoom-meeting", zoomMeetingRouter) // route for the zoom meeting
 
 /*--*-*-*-*-*-*-*-*-*-*-*-*-* Define the routes---*-*-*-*-*-*-*-*-*-*-*-*-*---*-*-*-*-*-*-*-*-*-*-*-*-*  */
 

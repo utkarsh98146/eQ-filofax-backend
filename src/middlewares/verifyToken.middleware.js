@@ -43,7 +43,7 @@ export const verifyToken = async (req, res, next) => {
   req.user = { userId }
   console.log(`User Authenticated successfully.. User ID: ${userId}`)
 
-  next()
+  next() // used to pass control to the next middleware function
 
   /*
     console.log(`Token value :${token}`)
