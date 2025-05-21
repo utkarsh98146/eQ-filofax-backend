@@ -7,9 +7,9 @@ export const zoomApiConfig = () => {
   const zoomClientSecret = process.env.ZOOM_CLIENT_SECRET
   // redirectUri: process.env.ZOOM_REDIRECT_URI,
   // scope: "user:read meeting:write meeting:read",
-  console.log("zoomAccountId", zoomAccountId)
-  console.log("zoomClientId", zoomClientId)
-  console.log("zoomClientSecret", zoomClientSecret)
+  console.log("zoomAccountId : ", zoomAccountId)
+  console.log("zoomClientId : ", zoomClientId)
+  console.log("zoomClientSecret : ", zoomClientSecret)
 
   return { zoomAccountId, zoomClientId, zoomClientSecret }
 }

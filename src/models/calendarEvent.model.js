@@ -90,6 +90,36 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: true,
       },
+      status: {
+        // status of the event
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: "scheduled",
+      },
+      hostId: {
+        // host id
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      hostName: {
+        // host name
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      hostEmail: {
+        // host email
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: {
+          isEmail: { msg: "Please provide a valid email" },
+          notEmpty: { msg: "Host email cannot be empty" },
+        },
+      },
+      joinUrl: {
+        // join url of the event
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       timestamps: true,

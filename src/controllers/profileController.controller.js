@@ -1,5 +1,5 @@
 import db from "../models/index.model.js"
-import { checkUserThroughToken } from "../services/tokenServices.service.js"
+import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
 
 // get the profile data controller
 export const profileDetailsController = async (req, res) => {

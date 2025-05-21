@@ -6,7 +6,7 @@ import dotenv from "dotenv"
 import bcrypt from "bcrypt"
 
 import db from "../models/index.model.js"
-import { generateToken } from "../services/tokenServices.service.js"
+import { generateToken } from "../services/jwt_tokenServices.service.js"
 dotenv.config()
 
 export const sendToken = (req, res) => {

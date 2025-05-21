@@ -4,6 +4,7 @@ import UserModel from "./user.model.js"
 import AvailabilityModel from "./availability.model.js"
 import TimeSlotModel from "./timeSlot.model.js"
 import CalendarEvent from "./calendarEvent.model.js"
+import ZoomMeetingModel from "./zoomMeeting.model.js"
 
 const db = {}
 
@@ -16,6 +17,7 @@ db.User = UserModel(sequelize, Sequelize.DataTypes)
 db.Availability = AvailabilityModel(sequelize, Sequelize.DataTypes)
 db.CalendarEvent = CalendarEvent(sequelize, Sequelize.DataTypes)
 db.TimeSlot = TimeSlotModel(sequelize, Sequelize.DataTypes)
+db.ZoomMeeting = ZoomMeetingModel(sequelize, Sequelize.DataTypes)
 
 db.User.hasMany(db.Availability, { foreignKey: "userId" })
 db.Availability.belongsTo(db.User, { foreignKey: "userId" })

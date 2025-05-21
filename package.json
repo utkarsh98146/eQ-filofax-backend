@@ -31,6 +31,7 @@
     "passport-microsoft": "^2.1.0",
     "pg": "^8.15.5",
     "pg-hstore": "^2.3.4",
+    "qs": "^6.14.0",
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
