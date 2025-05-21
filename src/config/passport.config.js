@@ -2,10 +2,10 @@
 import passport from "passport"
 import { Strategy as GoogleStrategy } from "passport-google-oauth20"
 import { Strategy as MicrosoftStrategy } from "passport-microsoft"
-import { handleOAuthUser } from "../middlewares/oauthHandler.middleware.js"
-import dotenv from "dotenv"
+import { handleOAuthUser } from "../utils/oauthHandler.utils.js"
 import db from "../models/index.model.js"
-// import { OIDCStrategy } from "passport-azure-ad"
+import dotenv from "dotenv"
+
 dotenv.config()
 
 //*-*-*-*- Serialize(saving the user data inside the session) and deserialize user(retriving the data from session) *-*-*-*

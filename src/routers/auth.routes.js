@@ -5,8 +5,7 @@ import dotenv from "dotenv"
 import "../config/passport.config.js" // passport configuration
 import { generateToken } from "../services/jwt_tokenServices.service.js"
 import db from "../models/index.model.js"
-import { where } from "sequelize"
-import { getOAuth2Client, scopes } from "../utils/googleCalendar.utils.js"
+import { scopes } from "../utils/googleCalendar.utils.js"
 
 const router = express.Router()
 dotenv.config()
@@ -39,6 +38,7 @@ router.get(
     accessType: "offline",
     prompt: "consent",
   })
+
   /*
     (req, res) => {
       // The request will be redirected to Google for authentication

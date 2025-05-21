@@ -51,6 +51,7 @@ export const generateZoomToken = async () => {
 
 export const generateZoomHeader = async () => {
   const zoomAccessToken = await generateZoomToken()
+  console.log("The zoom access token from zoomToken utils :", zoomAccessToken)
   return {
     Authorization: `Bearer ${zoomAccessToken}`, // Set the authorization header with the access token
     "Content-Type": "application/json",

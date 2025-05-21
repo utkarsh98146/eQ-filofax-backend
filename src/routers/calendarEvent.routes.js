@@ -1,11 +1,12 @@
 import express from "express"
+
+import { verifyToken } from "../middlewares/verifyToken.middleware.js"
 import {
   createEventController,
   deleteEventController,
   getAllEventController,
   updateEventController,
-} from "../controllers/calendar.controller.js"
-import { verifyToken } from "../middlewares/verifyToken.middleware.js"
+} from "../controllers/calendarEventController.controller.js"
 
 const router = express()
 

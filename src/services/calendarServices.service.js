@@ -1,3 +1,4 @@
+import { where } from "sequelize"
 import db from "../models/index.model.js"
 import { updateGoogleCalendarEvent } from "../utils/googleCalendar.utils.js"
 
