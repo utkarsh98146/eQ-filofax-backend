@@ -1,3 +1,4 @@
+/*
 import express from "express"
 import passport from "passport"
 import { login, sendToken, signup } from "../controllers/auth.controller.js"
@@ -10,10 +11,10 @@ import { getOAuth2Client, scopes } from "../utils/googleCalendar.utils.js"
 
 const router = express.Router()
 dotenv.config()
-
+*/
 /* Local Signup/Login routes */
-router.post("/local-signUp", signup)
-router.post("/local-login", login)
+// router.post("/local-signUp", signup)
+// router.post("/local-login", login)
 
 /* when google button click it work*/
 
@@ -31,7 +32,7 @@ router.get(
   sendToken
 )
 */
-
+/*
 router.get(
   "/google",
   passport.authenticate("google", {
@@ -107,3 +108,4 @@ router.get(
 )
 
 export const authRouter = router
+*/

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FiloFax API Testing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+
+        .response {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+    <!-- Add js-cookie CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+</head>
+
+<body>
+    <h1>FiloFax API Testing Dashboard</h1>
+
+    <!-- Google Auth Section -->
+    <div class="card">
+        <h2>Google Authentication</h2>
+        <button class="button" onclick="handleGoogleAuth()">Sign in with Google</button>
+        <div id="authResponse" class="response"></div>
+    </div>
+
+    <!-- Calendar Event Section -->
+    <div class="card">
+        <h2>Create Calendar Event</h2>
+        <form id="eventForm">
+            <input type="text" id="title" placeholder="Event Title" required>
+            <input type="datetime-local" id="startTime" required>
+            <input type="datetime-local" id="endTime" required>
+            <input type="text" id="description" placeholder="Event Description">
+            <input type="email" id="organizerEmail" placeholder="Organizer Email" required>
+            <button type="submit" class="button">Create Event</button>
+        </form>
+        <div id="eventResponse" class="response"></div>
+    </div>
+
+    <!-- List Events Section -->
+    <div class="card">
+        <h2>List Calendar Events</h2>
+        <button class="button" onclick="listEvents()">Get All Events</button>
+        <div id="listResponse" class="response"></div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:3002/api';
+
+        // Handle Google Auth
+        function handleGoogleAuth() {
+            window.location.href = `${BASE_URL}/auth/google`;
+        }
+
+        // Parse tokens from URL after OAuth redirect and set cookies
+        window.onload = function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const accessToken = urlParams.get('access_token');
+            const refreshToken = urlParams.get('refresh_token');
+            const jwtToken = urlParams.get('token');
+
+            // console.log('Access Token:', accessToken + ' Refresh Token:', refreshToken, 'JWT Token:', jwtToken);
+            // Set cookies if tokens are present in URL
+            if (accessToken) {
+                Cookies.set('access_token', accessToken);
+                document.getElementById('authResponse').innerHTML = 'Authentication successful!';
+            }
+            if (refreshToken) {
+                Cookies.set('refresh_token', refreshToken, {
+                    secure: false,
+                    sameSite: 'Strict',
+                    expires: 7 // 7 days
+                });
+            }
+            if (jwtToken) {
+                Cookies.set('token', jwtToken, {
+                    secure: false,
+                    sameSite: 'Lax',
+                    expires: 1
+                });
+            }
+
+            // Optional: Clear URL parameters after setting cookies
+            if (accessToken || refreshToken || jwtToken) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        // Helper to get tokens from cookies
+        function getToken(name) {
+            return Cookies.get(name) || '';
+        }
+
+        // Create Calendar Event
+        document.getElementById('eventForm').onsubmit = async function (e) {
+            e.preventDefault();
+
+            const accessToken = getToken('access_token');
+            const refreshToken = getToken('refresh_token');
+
+            const eventData = {
+                title: document.getElementById('title').value,
+                startTime: new Date(document.getElementById('startTime').value).toISOString(),
+                endTime: new Date(document.getElementById('endTime').value).toISOString(),
+                description: document.getElementById('description').value,
+                organizerEmail: document.getElementById('organizerEmail').value,
+                hostTimeZone: "Asia/Kolkata",
+                access_token: accessToken,
+                refresh_token: refreshToken
+            };
+
+            try {
+                const response = await fetch(`${BASE_URL}/google-calendar/create-event`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    credentials: 'include', // Send cookies if backend uses them
+                    body: JSON.stringify(eventData)
+                });
+
+                const data = await response.json();
+                document.getElementById('eventResponse').innerHTML =
+                    `Event created: <pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('eventResponse').innerHTML =
+                    `Error: ${error.message}`;
+            }
+        }
+
+        // List Events
+        async function listEvents() {
+            const accessToken = getToken('access_token');
+            try {
+                const response = await fetch(`${BASE_URL}/google-calendar/all-google-event`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                document.getElementById('listResponse').innerHTML =
+                    `Events: <pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('listResponse').innerHTML =
+                    `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+
+</html>

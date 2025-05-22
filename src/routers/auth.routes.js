@@ -31,6 +31,7 @@ router.get(
 )
 */
 
+/* when google button click it work*/
 router.get(
   "/google",
   passport.authenticate("google", {
@@ -38,17 +39,6 @@ router.get(
     accessType: "offline",
     prompt: "consent",
   })
-
-  /*
-    (req, res) => {
-      // The request will be redirected to Google for authentication
-      // If authentication is successful, the user will be redirected to the callback URL
-
-      console.log(
-        "Google authentication initiated and now redirecting to callback url"
-      )
-      res.status(200).json({ message: "Redirecting to Google..." })
-    }*/
 )
 
 router.get(
@@ -70,15 +60,14 @@ router.get(
         { where: { id: req.user.id } }
       )
 
-      // const token = generateToken(req.user) // or req.user.token if already generated
-      const FRONTEND_URL =
-        process.env.FRONTEND_URL ||
-        "http://localhost:5173" ||
-        "https://filo-fax-frontend-wkdx.vercel.app"
-      // res.redirect(
-      //   `${FRONTEND_URL}/dashboard?access_token=${googleAccessToken}&refresh_token=${googleRefreshToken}`
-      // )
-      const token = generateToken(req.user)
+      // testing purpose
+      // const FRONTEND_URL = `http://127.0.0.1:5500/filoFax-backend/src/dummy-files/google-apis-test.html`
+
+      const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173"
+
+      // "https://filo-fax-frontend-wkdx.vercel.app"
+
+      const token = await generateToken(req.user)
 
       if (token || googleAccessToken || googleRefreshToken) {
         console.log("Token when enter in if block for redirect : ", token)
@@ -89,8 +78,13 @@ router.get(
           "in the google/callback the token condition verifys now dashboard open"
         )
         res.redirect(
-          `${FRONTEND_URL}/dashboard?token=${token || ""}&access_token=${googleAccessToken || ""}&refresh_token=${googleRefreshToken || ""}`
+          `${FRONTEND_URL}/google/callback?token=${token || ""}&access_token=${googleAccessToken || ""}&refresh_token=${googleRefreshToken || ""}`
         )
+
+        // testing purpose
+        // res.redirect(
+        //   `${FRONTEND_URL}?token=${token || ""}&access_token=${googleAccessToken || ""}&refresh_token=${googleRefreshToken || ""}`
+        // )
       } else {
         console.log(
           "in the google/callback the token condition fails now login open"
@@ -108,6 +102,7 @@ router.get(
   }
 )
 
+/* when microsoft button click it work*/
 router.get("/microsoft", passport.authenticate("microsoft"))
 
 router.get(
