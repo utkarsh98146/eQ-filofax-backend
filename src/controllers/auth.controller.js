@@ -9,17 +9,18 @@ import db from "../models/index.model.js"
 import { generateToken } from "../services/jwt_tokenServices.service.js"
 dotenv.config()
 
-export const sendToken = (req, res) => {
+export const sendToken = async (req, res) => {
   const user = req.user // getting the user details from token(browser)
 
-  const token = generateToken(user) // generating refresh token via userId
-  // console.log('Token generated:', token)
-  // console.log(`Frontend URL: ${process.env.FRONTEND_BASE_URL}/dashboard?token=${token}`)
-  res
-  // res.redirect(
-  //   `"http://localhost:5173"||${"https://filo-fax-frontend-wkdx.vercel.app"}/dashboard?token=${token}`
-  // ) // dashboard url from client/
+  const token = await generateToken(user) // generating refresh token via userId
+
+  // original redirect url
   res.redirect(`${"http://localhost:5173"}/dashboard?token=${token}`) // dashboard url from client/
+
+  // for testing purpose
+  // res.redirect(
+  //   `http://127.0.0.1:5500/filoFax-backend/src/dummy-files/google-apis-test.html?jwt_token=${token}`
+  // ) // dashboard url from client/
 }
 
 export const signup = async (req, res) => {
@@ -58,7 +59,7 @@ export const signup = async (req, res) => {
 
     const token = generateToken(user.id) //Generate the token for client(UI)
 
-    res.cookie("access_token", token, {
+    res.cookie("access_token", accessToken, {
       httpOnly: true,
       sameSite: "Lax",
     })
