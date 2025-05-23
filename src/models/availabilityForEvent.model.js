@@ -1,3 +1,5 @@
+// availability for the event
+
 export default (sequelize, DataTypes) => {
   const Availability = sequelize.define(
     "Availability",
@@ -16,14 +18,22 @@ export default (sequelize, DataTypes) => {
           key: "id",
         },
       },
+      eventType: {
+        // 1-1 event type
+        // type of the event
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      location: {
+        // meet or zoom
+        // location of the event
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       daysOfWeek: {
         // no of days in week to available
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: false,
-        validate: {
-          min: 0,
-          max: 7,
-        },
       },
       startMin: {
         type: DataTypes.INTEGER,
