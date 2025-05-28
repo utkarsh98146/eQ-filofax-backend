@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken"
-
 import dotenv from "dotenv"
 dotenv.config()
 
+// generate the jwt token for user
 export const generateToken = async (user) => {
   try {
     const token = jwt.sign(
@@ -22,6 +22,7 @@ export const generateToken = async (user) => {
   }
 }
 
+// decode the user details from the token
 export const decodeToken = (token) => {
   try {
     const decode = jwt.verify(token, process.env.JWT_SECRET_KEY)
@@ -32,6 +33,7 @@ export const decodeToken = (token) => {
   }
 }
 
+// check the user auth through the jwt token based
 export const checkUserThroughToken = async (req, res) => {
   console.log(`The details from token extracting `, req.user)
   const { userId } = req.user // destructure the userId from the request object

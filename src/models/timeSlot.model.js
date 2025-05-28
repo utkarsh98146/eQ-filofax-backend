@@ -24,9 +24,13 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: false,
       },
-      isBooked: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+      status: {
+        type: DataTypes.ENUM("reserved", "available", "booked"),
+        defaultValue: "available",
+      },
+      reservedUntill: {
+        type: DataTypes.DATE,
+        allowNull: true,
       },
     },
     {

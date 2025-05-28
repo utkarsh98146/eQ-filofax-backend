@@ -1,3 +1,5 @@
+// availability for the event
+
 export default (sequelize, DataTypes) => {
   const Availability = sequelize.define(
     "Availability",
@@ -16,16 +18,23 @@ export default (sequelize, DataTypes) => {
           key: "id",
         },
       },
+      eventType: {
+        // 1-1 event type type of the event
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      location: {
+        // meet or zoom
+        // location of the event
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       daysOfWeek: {
         // no of days in week to available
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: false,
-        validate: {
-          min: 0,
-          max: 7,
-        },
       },
-      startMin: {
+      startTime: {
         type: DataTypes.INTEGER,
         allowNull: false,
         validate: {
@@ -33,13 +42,21 @@ export default (sequelize, DataTypes) => {
           max: 1436, // 23:59
         },
       },
-      endMin: {
+      endTime: {
         type: DataTypes.INTEGER,
         allowNull: false,
         validate: {
           min: 0,
           max: 1440, //24:00
         },
+      },
+      hostTimeZone: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      isAvailable: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
       },
     },
     {

@@ -10,6 +10,21 @@ export default (sequelize, DataTypes) => {
         defaultValue: UUIDV4,
         primaryKey: true,
       },
+
+      timeSlotId: {
+        // refer through the timeSlot table
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+          model: "TimeSlots",
+          key: "id",
+        },
+        eventId: {
+          // refer to the event id provided by google meet,zoom
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+      },
       title: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -46,36 +61,26 @@ export default (sequelize, DataTypes) => {
           },
         },
       },
+
       eventType: {
         // type of the event
         type: DataTypes.STRING,
         allowNull: true,
       },
+
       location: {
         // location of the event
         type: DataTypes.STRING,
         allowNull: true,
       },
+
       hostTimeZone: {
         // store the time zone the host own
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: "UTC",
       },
-      timeSlotId: {
-        // refer through the timeSlot table
-        type: DataTypes.UUID,
-        allowNull: true,
-        references: {
-          model: "TimeSlots",
-          key: "id",
-        },
-      },
-      eventId: {
-        // refer to the event id provided by google meet,zoom
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
+
       organizerEmail: {
         // host email
         type: DataTypes.STRING,
@@ -85,17 +90,13 @@ export default (sequelize, DataTypes) => {
           notEmpty: { msg: "Organizer email cannot be empty" },
         },
       },
+
       attendees: {
         // clients mail who attend the meeting
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: true,
       },
-      status: {
-        // status of the event
-        type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: "scheduled",
-      },
+
       hostId: {
         // host id
         type: DataTypes.STRING,
@@ -115,6 +116,7 @@ export default (sequelize, DataTypes) => {
           notEmpty: { msg: "Host email cannot be empty" },
         },
       },
+
       joinUrl: {
         // join url of the event
         type: DataTypes.STRING,

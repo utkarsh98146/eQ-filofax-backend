@@ -20,9 +20,12 @@ export const generateAuthUrl = async (req, res) => {
 
 //create event controller
 export const createEventController = async (req, res) => {
+  console.log("create event controller called..")
   try {
     const { access_token, refresh_token } = req.body
-
+    console.log("Request from the client : ", req.body)
+    console.log("access token in create event controller", access_token)
+    console.log("refresh token in create event controller", refresh_token)
     const calendar = getCalendarClient(access_token, refresh_token)
 
     const event = await createCalendarEvent(req.body, calendar)

@@ -59,10 +59,10 @@ export const signup = async (req, res) => {
 
     const token = generateToken(user.id) //Generate the token for client(UI)
 
-    res.cookie("access_token", accessToken, {
-      httpOnly: true,
-      sameSite: "Lax",
-    })
+    // res.cookie("access_token", accessToken, {
+    //   httpOnly: true,
+    //   sameSite: "Lax",
+    // })
     console.log("Local signup successfully..")
     res.status(201).json({
       message: "User SignUp successfully..",
