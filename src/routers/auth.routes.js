@@ -77,6 +77,10 @@ router.get(
         console.log(
           "in the google/callback the token condition verifys now dashboard open"
         )
+        console.warn(
+          `${FRONTEND_URL}/google/callback?token=${token || ""}&access_token=${googleAccessToken || ""}&refresh_token=${googleRefreshToken || ""}`
+        )
+
         res.redirect(
           `${FRONTEND_URL}/google/callback?token=${token || ""}&access_token=${googleAccessToken || ""}&refresh_token=${googleRefreshToken || ""}`
         )

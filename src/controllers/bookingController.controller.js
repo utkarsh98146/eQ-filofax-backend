@@ -1,5 +1,6 @@
 import db from "../models/index.model.js"
 import { createCalendarEvent } from "../services/calendarServices.service.js"
+import { sendConfirmationEmail } from "../services/emailServices.service.js"
 import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
 import { createZoomMeetingService } from "../services/zoomServices.service.js"
 
@@ -161,19 +162,34 @@ export const confirmBookingForEvent = async (req, res) => {
       location: platform === "zoom" ? platform : "google-meet",
       userId: userId,
       timeSlotId: slot.id,
+      joinUrl: meeting.joinUrl,
       eventId: meeting ? meeting.id : null, // Store the meeting ID if available
     })
-      slot.status = "booked" // Update the slot status to 'booked'
+    slot.status = "booked" // Update the slot status to 'booked'
+    slot.reservedUntill = null
+    slot.bookedBy = userId // Store the ID of the user who booked the slot
+    await slot.save()
+    console.log("Booking confirmed successfully:", event)
 
-      slot.bookedBy = userId // Store the ID of the user who booked the slot
-      await slot.save()
-      console.log("Booking confirmed successfully:", event)
-      
+    // Send confirmation email to the user and admin
+    const admin = await db.User.findByPk(slot.availability.userId)
 
-      // Send confirmation email to the user and admin
-      const admin = await db.User.findByPk(slot.availability.userId)
-      
-      await 
+    await sendConfirmationEmail({
+      to: email,
+      subject: "Your meeting is scheduled",
+      event,
+    })
+
+    await sendConfirmationEmail({
+      to: admin.email,
+      subject: "A meeting was booked ",
+      event,
+    })
+
+    res.status(201).json({
+      message: "Meeting scheduled successfully..",
+      event,
+    })
   } catch (error) {
     console.error("Error confirming booking for event:", error)
     return res.status(500).json({
@@ -181,4 +197,37 @@ export const confirmBookingForEvent = async (req, res) => {
       error: error.message,
     })
   }
+}
+
+/*--------------------- Optional feature ----------*/
+
+// Release a slot (if user cancel the meeting)
+export const releaseSlot = async (req, res) => {
+  try {
+    const { slotId } = req.body
+
+    const slotDetails = await db.TimeSlot.findByPk(slotId)
+
+    if (slotDetails && slotDetails.status === "reserved") {
+      slotDetails.status = "available"
+      slotDetails.reservedUntill = null
+      await slotDetails.save()
+    }
+    res.status(200).json({ message: "Slot released", success: true })
+  } catch (error) {
+    console.log("Error in releasing the time slot from booking controller")
+    res.status(500).json({
+      success: false,
+      message: "Error while releasing the book timeSlot",
+      error: error.message,
+    })
+  }
+}
+
+// Auto release expired reservations
+export const releaseExpiredReservations = async (req, res) => {
+  await db.TimeSlot.update(
+    { status: "available", reservedUntill: null },
+    { where: { status: "reserved", reservedUntill: { [Op.lt]: new Date() } } }
+  )
 }

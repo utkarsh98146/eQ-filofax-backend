@@ -13,7 +13,7 @@ export default (sequelize, DataTypes) => {
         allowNull: false,
         references: {
           model: "Availabilities",
-          id: "id",
+          key: "id",
         },
       },
       startTime: {

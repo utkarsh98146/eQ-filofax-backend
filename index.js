@@ -15,9 +15,8 @@ import { zoomApiConfig } from "./src/config/zoomApi.config.js"
 import { zoomMeetingRouter } from "./src/routers/zoomMeeting.routes.js"
 import { eventsOnDashboardRouter } from "./src/routers/eventsOnDashboard.routes.js"
 
-dotenv.config()
-
 const app = express()
+dotenv.config()
 
 const PORT = parseInt(process.env.SERVER_PORT, 10) || 3000
 
