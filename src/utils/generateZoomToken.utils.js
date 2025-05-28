@@ -8,6 +8,7 @@ const { zoomClientId, zoomAccountId, zoomClientSecret } = zoomApiConfig()
 let zoomAccessToken = null
 let zoomTokenExpiration = null
 
+// Function to get the authorization header for Zoom API requests
 const getAuthHeader = () => {
   const encodedCredentials = base64.encode(
     // Encode the client ID and secret using base64
@@ -19,6 +20,7 @@ const getAuthHeader = () => {
   }
 }
 
+// Function to generate a Zoom access token
 export const generateZoomToken = async () => {
   const now = Date.now() // Get the current time in milliseconds
   try {
@@ -49,6 +51,7 @@ export const generateZoomToken = async () => {
   }
 }
 
+// Function to generate the Zoom authorization header
 export const generateZoomHeader = async () => {
   const zoomAccessToken = await generateZoomToken()
   console.log("The zoom access token from zoomToken utils :", zoomAccessToken)

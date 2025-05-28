@@ -1,4 +1,3 @@
-import { where } from "sequelize"
 import db from "../models/index.model.js"
 import { updateGoogleCalendarEvent } from "../utils/googleCalendar.utils.js"
 
@@ -15,8 +14,8 @@ export const createCalendarEvent = async (data, calendar) => {
       dateTime: data.endTime,
       timeZone: data.hostTimeZone || "Asia/Kolkata",
     },
-    // attendees: data.attendees.map((email) => ({ email })),
-    attendees: [{ email: data.organizerEmail }],
+    attendees: data.attendees.map((email) => ({ email })),
+    // attendees: [{ email: data.organizerEmail }],
     conferenceData: {
       createRequest: {
         requestId: `${Date.now()}`,
@@ -50,7 +49,11 @@ export const createCalendarEvent = async (data, calendar) => {
     ...data,
     eventId: response.data.id,
   })
-  return savedEvent
+  return {
+    savedEvent,
+    joinUrl: response.data.hangoutLink,
+    meetingId: response.data.id,
+  }
 }
 
 // get all calendar events

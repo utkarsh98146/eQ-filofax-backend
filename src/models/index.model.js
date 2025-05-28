@@ -1,7 +1,7 @@
 import { Sequelize } from "sequelize"
 import { sequelize } from "../config/database.config.js"
-import UserModel from "./user.model.js"
 
+import UserModel from "./user.model.js"
 import TimeSlotModel from "./timeSlot.model.js"
 import CalendarEvent from "./calendarEvent.model.js"
 import ZoomMeetingModel from "./zoomMeeting.model.js"
@@ -15,9 +15,13 @@ db.Sequelize = Sequelize
 // initialize all the models
 
 db.User = UserModel(sequelize, Sequelize.DataTypes)
+
 db.Availability = AvailabilityForEventModel(sequelize, Sequelize.DataTypes)
+
 db.CalendarEvent = CalendarEvent(sequelize, Sequelize.DataTypes)
+
 db.TimeSlot = TimeSlotModel(sequelize, Sequelize.DataTypes)
+
 db.ZoomMeeting = ZoomMeetingModel(sequelize, Sequelize.DataTypes)
 
 db.User.hasMany(db.Availability, { foreignKey: "userId" })

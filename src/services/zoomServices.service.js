@@ -85,6 +85,8 @@ export const createZoomMeetingService = async (data) => {
     return {
       zoomMeetingDeatails: response.data, // Zoom meeting details
       zoomMeetingDeatailsInDB: savedMeetingInDB, // Saved meeting details in the database
+      joinUrl: response.data.join_url, // Join URL for the meeting
+      meetingId: response.data.id, // Meeting ID
     }
   } catch (error) {
     console.error("Error creating Zoom meeting:", error.message)

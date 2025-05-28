@@ -16,6 +16,7 @@ export const verifyToken = async (req, res, next) => {
     })
   }
 
+  // const token = bearerHeader.split(" ")[1] // extracting token value from bearer header
   const token = bearerHeader.split(" ")[1] // extracting token value from bearer header
 
   const decodedData = decodeToken(token) // decoded the details from token
