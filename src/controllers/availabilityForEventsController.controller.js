@@ -1,12 +1,76 @@
 import db from "../models/index.model.js"
-import checkUserThroughToken from "../services/jwt_tokenServices.service.js"
-import { generateBookingTimeSLots } from "../utils/generateBookingSlotTime.utils.js"
+import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
+import {
+  generateBookingTimeSLots,
+  generateDefaultAvailability,
+} from "../utils/timeUtility.utils.js"
+
+// create default availability for every new host by default
+export const createDefaultAvailability = async (req, res) => {
+  try {
+    const { userId } = await checkUserThroughToken // userId from the token
+
+    const { hostTimeZone = "Asia/kolkota" } = req.body
+
+    const existitngAvailability = await db.Availability.findByPk(userId) // if user already existed
+
+    if (existitngAvailability) {
+      return res.status(400).json({
+        message: "Availability already exists for this user",
+        success: false,
+      })
+    }
+
+    // Get default working hours (Monday - Friday 9AM - 5PM)
+
+    const defaultSchedule = generateDefaultAvailability() // load the default working hours
+
+    const records = []
+
+    for (const item of defaultSchedule) {
+      records.push({
+        userId,
+        daysOfWeek: item.daysOfWeek,
+        startTime: item.startTime,
+        endTime: item.endTime,
+        isAvailable: item.isAvailable,
+        hostTimeZone,
+      })
+
+      const created = await db.Availability.bulkCreate(records)
+
+      // generate time slots for available days
+      for (const availability of created) {
+        if (
+          availability.isAvailable &&
+          availability.startTime &&
+          availability.endTime
+        ) {
+          const slots = generateBookingTimeSLots(availability, 30) // 30 min slots for each
+
+          await db.TimeSlot.bulkCreate(slots)
+        }
+      }
+      res.status(201).json({
+        message: "Default availability created succesfully..",
+        success: true,
+        availability: created,
+      })
+    }
+  } catch (error) {
+    console.log("Error while creating default availability for host")
+    res.status(500).json({
+      message: "Error while creating default availability for host",
+      error: error.message,
+    })
+  }
+}
 
 // set the availablity
 export const setAvailabilityForNewEvent = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken() // getting the user id through token
-    const { eventId, hostTimeZone, availability } = req.body // getting the event id and availability details from the request body
+    const { userId } = await checkUserThroughToken() // getting the user id through token
+    const { hostTimeZone, availability } = req.body // getting the event id and availability details from the request body
 
     if (!userId) {
       console.log(
@@ -22,29 +86,25 @@ export const setAvailabilityForNewEvent = async (req, res) => {
     let records = []
 
     for (const item of availability) {
-      const { daysOfWeek, intervals = [], isAvailable = true, location } = item
+      const { daysOfWeek, intervals = [], isAvailable = true } = item
 
-      if (intervals.length === 0 || !isAvailable || !location) {
+      if (intervals.length === 0 || !isAvailable) {
         records.push({
-          daysOfWeek,
           userId,
-          eventId,
-          startTime: 0,
-          endTime: 0,
+          daysOfWeek,
+          startTime: null,
+          endTime: null,
           isAvailable: false,
           location,
           hostTimeZone,
         })
       } else {
         for (const interval of intervals) {
-          const { startTime, endTime } = interval
-
           records.push({
-            daysOfWeek,
             userId,
-            eventId,
-            startTime,
-            endTime,
+            daysOfWeek,
+            startTime: interval.startTime,
+            endTime: interval.endTime,
             isAvailable: true,
             location,
             hostTimeZone,
@@ -61,7 +121,7 @@ export const setAvailabilityForNewEvent = async (req, res) => {
         availableSlot.startTime &&
         availableSlot.endTime
       ) {
-        const slots = generateBookingTimeSLots(availableSlot, 30) // 30 minutes slot
+        const slots = generat // 30 minutes slot
         await db.TimeSlot.bulkCreate(slots)
       }
     }
@@ -85,16 +145,7 @@ export const setAvailabilityForNewEvent = async (req, res) => {
 // get the availability for the event
 export const getAvailabilityForEvent = async (req, res) => {
   try {
-    const { eventId } = req.params // getting the event id from the request params
-
-    if (!eventId) {
-      return res.status(400).json({
-        success: false,
-        message: "Event ID is required",
-      })
-    }
-
-    const { userId } = checkUserThroughToken() // getting the user id through token
+    const { userId } = await checkUserThroughToken() // getting the user id through token
 
     if (!userId) {
       console.log(
@@ -108,7 +159,6 @@ export const getAvailabilityForEvent = async (req, res) => {
     }
     const availability = await db.Availability.findAll({
       where: {
-        eventId,
         userId,
       },
       include: [
@@ -119,10 +169,26 @@ export const getAvailabilityForEvent = async (req, res) => {
         },
       ],
     })
+
+    if (availability.length === 0) {
+      return res.status(404).json({
+        message: "No availability found. Create default availability first.",
+        success: false,
+      })
+    }
+
+    // format response
+
+    const formattedAvailability = {
+      userId,
+      hostTimeZone: availability[0]?.hostTimeZone || "UTC",
+      weeklyHours: formatWeeklyHours(availability),
+    }
+
     res.status(200).json({
       success: true,
       message: "Availability fetched successfully",
-      data: availability,
+      data: formattedAvailability,
     })
   } catch (error) {
     console.error(
@@ -134,4 +200,42 @@ export const getAvailabilityForEvent = async (req, res) => {
       error: error.message,
     })
   }
+}
+
+// helper function to format weekly hours for host
+function formatWeeklyHours(availability) {
+  const days = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ]
+
+  const weeklyHours = {}
+
+  days.forEach((day) => {
+    const dayAvailability = availability.filter(
+      (item) => item.daysOfWeek === day
+    )
+
+    if (dayAvailability.length === 0 || !dayAvailability[0].isAvailable) {
+      weeklyHours[day] = {
+        isAvailable: false,
+        interval: [],
+      }
+    } else {
+      weeklyHours[day] = {
+        isAvailable: true,
+        interval: dayAvailability.map((item) => ({
+          startTime: item.startTime,
+          endTime: item.endTime,
+        })),
+      }
+    }
+  })
+
+  return weeklyHours
 }

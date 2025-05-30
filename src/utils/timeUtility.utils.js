@@ -24,7 +24,7 @@ export const generateBookingTimeSLots = (availability, slotMinutes = 30) => {
 }
 
 // Generate By Default Availablility Time SLots by host
-export const generateDefaultAvailability = async () => {
+export const generateDefaultAvailability = () => {
   return [
     // Sunday - Unavailable
     {

@@ -1,12 +1,19 @@
 import express from "express"
-import { setAvailabilityForNewEvent } from "../controllers/availabilityForEventsController.controller"
+import {
+  createDefaultAvailability,
+  getAvailabilityForEvent,
+  setAvailabilityForNewEvent,
+} from "../controllers/availabilityForEventsController.controller.js"
 
 const router = express.Router()
 
-// get the host available times for the event
-router.get("/availabilityForEvent", setAvailabilityForNewEvent)
+// create a default
+// router.post("/create-default-availability", createDefaultAvailability)
 
-//
-router.put("/setAvailability")
+// get the host available times for the event
+router.get("/get/:userId", getAvailabilityForEvent)
+
+// set(update) the availability of host
+router.put("/set", setAvailabilityForNewEvent)
 
 export const availabilityForEvents = router

@@ -26,6 +26,7 @@ export const generateToken = async (user) => {
 export const decodeToken = (token) => {
   try {
     const decode = jwt.verify(token, process.env.JWT_SECRET_KEY)
+    console.log(" the decode value : ", decode)
     return decode
   } catch (error) {
     console.error("Error while decoding the token : ", error.mesaage)
@@ -35,16 +36,14 @@ export const decodeToken = (token) => {
 
 // check the user auth through the jwt token based
 export const checkUserThroughToken = async (req, res) => {
-  console.log(`The details from token extracting `, req.user)
+  console.log(`The details from token extracting in token service `, req.user)
   const { userId } = req.user // destructure the userId from the request object
   if (!userId) {
     return res.status(403).json({
       message: "Unauthorized Access, you don't have permission",
       success: false,
     })
-    throw new Error(
-      "Unauthorized Access, you don't have permission, token not found"
-    )
   }
-  return userId // return the userId
+  // console.log("User id extracted from the token service : ", userId)
+  return { userId } // return the userId
 }

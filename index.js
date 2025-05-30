@@ -14,6 +14,7 @@ import { authRouter } from "./src/routers/auth.routes.js"
 import { zoomApiConfig } from "./src/config/zoomApi.config.js"
 import { zoomMeetingRouter } from "./src/routers/zoomMeeting.routes.js"
 import { eventsOnDashboardRouter } from "./src/routers/eventsOnDashboard.routes.js"
+import { availabilityForEvents } from "./src/routers/availabilityForEvents.routes.js"
 
 const app = express()
 dotenv.config()
@@ -66,6 +67,8 @@ app.use("/api/auth", authRouter) // route for the auth(Login/SignUp)
 app.use("/api/profile", verifyToken, profileRouter) //  route for user profile
 
 app.use("/api/events", eventsOnDashboardRouter) // route for the events on the dashboard
+
+app.use("/api/availability", availabilityForEvents) // route for the availability
 
 app.use("/api/google-calendar", calendarEventRouter) // route for the google calendar event
 

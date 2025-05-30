@@ -43,7 +43,7 @@ export default (sequelize, DataTypes) => {
         allowNull: false,
       },
       startTime: {
-        type: DataTypes.TIME,
+        type: DataTypes.STRING,
         allowNull: false,
         validate: {
           min: 0,
@@ -51,7 +51,7 @@ export default (sequelize, DataTypes) => {
         },
       },
       endTime: {
-        type: DataTypes.TIME,
+        type: DataTypes.STRING,
         allowNull: false,
         validate: {
           min: 0,

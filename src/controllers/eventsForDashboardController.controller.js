@@ -4,7 +4,7 @@ import { getAllUpcomingEvents } from "../services/mergeEventService.service.js"
 export const getEventsForDashboard = async (req, res) => {
   try {
     // Check if the user is authenticated
-    const { userId } = checkUserThroughToken()
+    const { userId } = await checkUserThroughToken()
     if (!userId) {
       return res.status(401).json({
         success: false,

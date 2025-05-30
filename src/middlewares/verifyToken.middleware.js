@@ -6,7 +6,11 @@ dotenv.config()
 
 // verify token middleware
 export const verifyToken = async (req, res, next) => {
+  // console.log(" the header data :", req.headers["authorization"])
+
   const bearerHeader = req.headers["authorization"] // request the bearer header
+  // console.log(" now for value :", bearerHeader)
+
   if (!bearerHeader || !bearerHeader.startsWith("Bearer ")) {
     console.warn("Authorization header missing")
     res.status(401).json({
@@ -16,7 +20,6 @@ export const verifyToken = async (req, res, next) => {
     })
   }
 
-  // const token = bearerHeader.split(" ")[1] // extracting token value from bearer header
   const token = bearerHeader.split(" ")[1] // extracting token value from bearer header
 
   const decodedData = decodeToken(token) // decoded the details from token

@@ -7,7 +7,7 @@ import { createZoomMeetingService } from "../services/zoomServices.service.js"
 // get available slots of an event for admin
 export const getAvailableSlotsForEvent = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken() // Check if the user is authenticated
+    const { userId } = await checkUserThroughToken() // Check if the user is authenticated
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -46,7 +46,7 @@ export const getAvailableSlotsForEvent = async (req, res) => {
 //reserve a slot for an event
 export const reserveSlotForEvent = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken() // Check if the user is authenticated
+    const { userId } = await checkUserThroughToken() // Check if the user is authenticated
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -99,7 +99,7 @@ export const reserveSlotForEvent = async (req, res) => {
 // Book a reserved slot for an event
 export const confirmBookingForEvent = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken() // Check if the user is authenticated
+    const { userId } = await checkUserThroughToken() // Check if the user is authenticated
     if (!userId) {
       return res.status(401).json({
         success: false,
