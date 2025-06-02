@@ -14,8 +14,13 @@ export const createCalendarEvent = async (data, calendar) => {
       dateTime: data.endTime,
       timeZone: data.hostTimeZone || "Asia/Kolkata",
     },
-    attendees: data.attendees.map((email) => ({ email })),
+
+    attendees: Array.isArray(data.attendees)
+      ? data.attendees.map((email) => ({ email }))
+      : [],
+
     // attendees: [{ email: data.organizerEmail }],
+
     conferenceData: {
       createRequest: {
         requestId: `${Date.now()}`,

@@ -94,6 +94,19 @@ export default (sequelize, DataTypes) => {
       lastLoginMethod: {
         type: DataTypes.ENUM("local", "google", "microsoft"),
       },
+      welcomeMessage: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: "Welcome to my profile",
+      },
+      dateFormat: {
+        type: DataTypes.STRING,
+        defaultValue: "YYYY/MM/DD",
+      },
+      timeFormat: {
+        type: DataTypes.STRING,
+        defaultValue: "12h",
+      },
       timezone: {
         type: DataTypes.STRING,
         allowNull: true,
