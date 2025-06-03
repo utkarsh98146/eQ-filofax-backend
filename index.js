@@ -66,9 +66,9 @@ app.use("/api/auth", authRouter) // route for the auth(Login/SignUp)
 
 app.use("/api/profile", verifyToken, profileRouter) //  route for user profile
 
-app.use("/api/events", eventsOnDashboardRouter) // route for the events on the dashboard
+app.use("/api/events", verifyToken, eventsOnDashboardRouter) // route for the events on the dashboard
 
-app.use("/api/availability", availabilityForEvents) // route for the availability
+app.use("/api/availability", verifyToken, availabilityForEvents) // route for the availability
 
 app.use("/api/google-calendar", calendarEventRouter) // route for the google calendar event
 
