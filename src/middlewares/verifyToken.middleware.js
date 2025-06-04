@@ -13,7 +13,7 @@ export const verifyToken = async (req, res, next) => {
 
   if (!bearerHeader || !bearerHeader.startsWith("Bearer ")) {
     console.warn("Authorization header missing")
-    res.status(401).json({
+    return res.status(401).json({
       message:
         "Invalid authorization format. Expected 'Bearer <token>' means Token not received from client",
       success: false,
@@ -24,18 +24,19 @@ export const verifyToken = async (req, res, next) => {
 
   const decodedData = decodeToken(token) // decoded the details from token
 
+  if (!decodedData || !decodedData.id) {
+    console.error("Decoded token is missing ")
+    return res
+      .status(403)
+      .json({ message: "Invalid or expired token", success: false })
+  }
+
   const userId = decodedData.id
+  const { name, email } = decodedData
   console.log(
     `User id ${userId} from decode token and decode-Token `,
     decodedData
   )
-
-  if (!decodedData || !decodedData.id) {
-    console.error("Decoded token is missing ")
-    res
-      .status(403)
-      .json({ message: "Invalid or expired token", success: false })
-  }
 
   if (!userId) {
     return res.status(403).json({
@@ -44,7 +45,7 @@ export const verifyToken = async (req, res, next) => {
     })
   }
 
-  req.user = { userId }
+  req.user = { userId, name, email }
   console.log(`User Authenticated successfully.. User ID: ${userId}`)
 
   next() // used to pass control to the next middleware function

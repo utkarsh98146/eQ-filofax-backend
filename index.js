@@ -66,7 +66,7 @@ app.use("/api/auth", authRouter) // route for the auth(Login/SignUp)
 
 app.use("/api/profile", verifyToken, profileRouter) //  route for user profile
 
-app.use("/api/events", verifyToken, eventsOnDashboardRouter) // route for the events on the dashboard
+app.use("/api/event-schedule", verifyToken, eventsOnDashboardRouter) // route for the events on the dashboard
 
 app.use("/api/availability", verifyToken, availabilityForEvents) // route for the availability
 

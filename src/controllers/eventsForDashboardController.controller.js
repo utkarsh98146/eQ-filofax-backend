@@ -2,6 +2,7 @@ import { where } from "sequelize"
 import { sequelize } from "../config/database.config.js"
 import db from "../models/index.model.js"
 import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
+import { slugify } from "../utils/dashboardUtils.utils.js"
 // import { getAllUpcomingEvents } from "../services/mergeEventService.service.js"
 // merge all google and zoom event by time
 // export const getEventsForDashboard = async (req, res) => {
@@ -36,6 +37,8 @@ import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
 //     })
 //   }
 // }
+import dotenv from "dotenv"
+dotenv.config()
 
 // create event for dashboard
 export const createEventTypeOnDashboard = async (req, res) => {
@@ -58,12 +61,9 @@ export const createEventTypeOnDashboard = async (req, res) => {
       hostEmail,
     } = req.body
 
-    const baseSlug = eventType
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "")
-
+    /*
+    //generate the unique slug for link
+    const baseSlug = slugify(eventType)
     let slug = baseSlug
 
     let counter = 1
@@ -76,13 +76,14 @@ export const createEventTypeOnDashboard = async (req, res) => {
       slug = `${baseSlug}-${counter}`
       counter++
     }
+    
+      */
 
     const eventTypeCreated = await db.EventType.create(
       {
         userId,
         title,
         eventType,
-        slug,
         duration,
         location,
         availability_time,
@@ -107,9 +108,16 @@ export const createEventTypeOnDashboard = async (req, res) => {
 
     await transaction.commit()
 
+    // console.log("userName : ", req.user.name)
+
+    // slug username
+    // const userSlug = slugify(req.user?.name || "name")
+
     // generate booking URL
-    const BASE_URL = "/api/profile"
-    const bookingUrl = `${BASE_URL}/${req.user?.name || "user"}/${slug}`
+    const eventId = eventTypeCreated.id
+    console.log("Event id that event created :", eventId)
+    const bookingUrl = `${process.env.BASE_URL}/${eventId}`
+    console.log("BookingUrl generated while create :", bookingUrl)
 
     console.log("Data creatred for the dashboard event :", eventTypeCreated)
 
@@ -145,11 +153,11 @@ export const updateEventTypeOnDashboard = async (req, res) => {
       timeSlots, // Array of time slots
       hostName,
       hostEmail,
+      isActive,
     } = req.body
 
     const event = await db.EventType.findOne({
-      where: userId,
-      eventId: id,
+      where: { id, userId },
     })
 
     if (!event) {
@@ -157,15 +165,12 @@ export const updateEventTypeOnDashboard = async (req, res) => {
         .status(404)
         .json({ message: "Event not found with this event id : ", id })
     }
-
+    /*
     // if name change then slug will change
-    let slug = event.slug
-    if (name && name !== event.name) {
-      const baseSlug = name
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "-")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "")
+   
+    let slug = event.bookingUrl
+    if (eventType && eventType !== event.eventType) {
+      const baseSlug = slugify(eventType)
     }
     slug = baseSlug
     let counter = 1
@@ -180,13 +185,13 @@ export const updateEventTypeOnDashboard = async (req, res) => {
       slug = `${baseSlug}-${counter}`
       counter++
     }
+    */
 
     // update the event type
-    await event.update(
+    const updatedEvent = await event.update(
       {
         title,
         eventType,
-        slug,
         duration,
         location,
         availability_time,
@@ -196,7 +201,7 @@ export const updateEventTypeOnDashboard = async (req, res) => {
       },
       { transaction }
     )
-    /*
+
     // Update time slots if provided
     if (timeSlots) {
       // Delete existing time slots
@@ -217,14 +222,23 @@ export const updateEventTypeOnDashboard = async (req, res) => {
         await db.TimeSlot.bulkCreate(timeSlotData, { transaction })
       }
     }
-    */
+
     await transaction.commit()
-    res
-      .status(200)
-      .json(
-        { success: true, message: "Event updated successfully.." },
-        bookingUrl
-      )
+
+    // const BASE_URL = process.env.BASE_URL
+    // console.log("Base url from env", BASE_URL)
+    const eventId = updatedEvent.id
+    console.log("Event id that event created :", eventId)
+
+    const bookingUrl = `${process.env.BASE_URL}/${eventId}`
+    console.log("BookingUrl generated while create :", bookingUrl)
+
+    res.status(200).json({
+      success: true,
+      message: "Event updated successfully..",
+      bookingUrl: bookingUrl,
+      event: updatedEvent,
+    })
   } catch (error) {
     console.log(
       "Error while updating the event for dashboard in controller",
@@ -254,10 +268,14 @@ export const getAllEventTypeOnDashboard = async (req, res) => {
       order: [["createdAt", "DESC"]],
     })
 
-    const eventsWithUrls = events.map((event) => ({
-      ...event.toJSON(),
-      bookingUrl: `${process.env.BASE_URL}/${req.user.name}/${event.slug}`,
-    }))
+    const eventsWithUrls = events.map((event) => {
+      const eventId = event.id
+      const bookingUrl = `${process.env.BASE_URL}/${eventId}`
+      return {
+        ...event.toJSON(),
+        bookingUrl,
+      }
+    })
 
     res.status(200).json({
       success: true,
@@ -301,11 +319,12 @@ export const getEventTypeOnDashboard = async (req, res) => {
       return res.status(404).json({ error: "Event not found " })
     }
 
+    const eventId = event.id
     res.status(200).json({
       message: "Event fetch from dashboard",
       event: {
         ...event.toJSON(),
-        bookingUrl: `${process.env.BASE_URL}/${req.user.name}/${event.slug}`,
+        bookingUrl: `${process.env.BASE_URL}/${eventId}`,
       },
     })
   } catch (error) {

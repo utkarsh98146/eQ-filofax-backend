@@ -16,6 +16,14 @@ export default (sequelize, DataTypes) => {
           key: "id",
         },
       },
+      eventTypeId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "EventTypes",
+          key: "id",
+        },
+      },
       startTime: {
         type: DataTypes.DATE,
         allowNull: false,

@@ -14,7 +14,7 @@ router.post("/create-dashboard-event", createEventTypeOnDashboard) // create eve
 
 router.get("/getAll-dashboard-event", getAllEventTypeOnDashboard) // get all event for dashboard
 
-router.get("/get-dashboard-event/:id", getEventTypeOnDashboard) // get one event for dashboard
+router.get("/:id", getEventTypeOnDashboard) // get one event for dashboard
 
 router.put("/update-dashboard-event", updateEventTypeOnDashboard) // update event for dashboard
 

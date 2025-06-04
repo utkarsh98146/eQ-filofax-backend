@@ -21,10 +21,11 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         defaultValue: "New Meeting",
       },
-      slug: {
-        type: DataTypes.STRING,
-        allowNull: false, // "30min-consultation" for URL
-      },
+
+      // slug: {
+      //   type: DataTypes.STRING,
+      //   allowNull: false, // "30min-consultation" for URL
+      // },
       duration: {
         type: DataTypes.INTEGER, // duration in minutes
         allowNull: false,
