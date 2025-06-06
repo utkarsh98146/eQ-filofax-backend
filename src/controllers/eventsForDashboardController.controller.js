@@ -2,7 +2,7 @@ import { where } from "sequelize"
 import { sequelize } from "../config/database.config.js"
 import db from "../models/index.model.js"
 import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
-import { slugify } from "../utils/dashboardUtils.utils.js"
+
 // import { getAllUpcomingEvents } from "../services/mergeEventService.service.js"
 // merge all google and zoom event by time
 // export const getEventsForDashboard = async (req, res) => {
@@ -42,6 +42,8 @@ dotenv.config()
 
 // create event for dashboard
 export const createEventTypeOnDashboard = async (req, res) => {
+  console.log("Create event for dashboard api called...")
+
   const transaction = await sequelize.transaction()
   try {
     console.log("Create event api called..")
@@ -139,6 +141,8 @@ export const createEventTypeOnDashboard = async (req, res) => {
 
 //update Event Type for dashboard
 export const updateEventTypeOnDashboard = async (req, res) => {
+  console.log("Update event on dashboard api called..")
+
   const transaction = await sequelize.transaction()
 
   try {
@@ -255,6 +259,8 @@ export const updateEventTypeOnDashboard = async (req, res) => {
 
 // get all events on dashboard
 export const getAllEventTypeOnDashboard = async (req, res) => {
+  console.log("Get all event api for dashboard called...")
+
   try {
     const { userId } = await checkUserThroughToken(req) // extract the token
     const events = await db.EventType.findAll({
@@ -294,13 +300,14 @@ export const getAllEventTypeOnDashboard = async (req, res) => {
 
 // get event deatils on dashboard
 export const getEventTypeOnDashboard = async (req, res) => {
+  console.log("Get one event for public user api called..")
+
   try {
-    const { userId } = await checkUserThroughToken(req) // extract the token
+    // const { userId } = await checkUserThroughToken(req) // extract the token
     const { id } = req.params // event id from params
 
-    const event = await db.EventType({
+    const event = await db.EventType.findOne({
       where: {
-        userId,
         id,
       },
       include: [
@@ -342,6 +349,8 @@ export const getEventTypeOnDashboard = async (req, res) => {
 
 // delete the event from dashboard
 export const deleteEventTypeOnDashboard = async (req, res) => {
+  console.log("Delete event api called for dashboard..")
+
   const transaction = await sequelize.transaction()
   try {
     const { userId } = checkUserThroughToken(req) // extract token

@@ -1,8 +1,12 @@
+import { calendar } from "googleapis/build/src/apis/calendar/index.js"
 import db from "../models/index.model.js"
 import { createCalendarEvent } from "../services/calendarServices.service.js"
 import { sendConfirmationEmail } from "../services/emailServices.service.js"
 import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
 import { createZoomMeetingService } from "../services/zoomServices.service.js"
+import { getCalendarClient } from "../utils/googleCalendar.utils.js"
+import { convertSlotTo24H } from "../utils/timeUtility.utils.js"
+import { getHostTokensFromDB } from "../utils/tokenStore.utils.js"
 
 // get available slots of an event for admin
 export const getAvailableSlotsForEvent = async (req, res) => {
@@ -230,4 +234,143 @@ export const releaseExpiredReservations = async (req, res) => {
     { status: "available", reservedUntill: null },
     { where: { status: "reserved", reservedUntill: { [Op.lt]: new Date() } } }
   )
+}
+
+export const bookEvent = async (req, res) => {
+  console.log("book event api call")
+  try {
+    const {
+      userId,
+      eventId,
+      title,
+      date,
+      slot,
+      duration,
+      attendeeName,
+      attendeeEmail,
+      hostName,
+      hostEmail,
+      location,
+      attendee_notes,
+      hostTimeZone = "Asia/Kolkata",
+    } = req.body
+
+    let meetingLink = location
+    let meetingId = null
+    console.log(
+      `Email  ${hostEmail}, and location in bokking page from host :${location}`
+    )
+
+    // Fetch tokens from DB (assume you store them)
+    const { access_token, refresh_token, zoom_access_token } =
+      await getHostTokensFromDB(hostEmail, location)
+
+    const startTime = new Date(`${date}T${convertSlotTo24H(slot)}:00`)
+    const endTime = new Date(startTime.getTime() + duration * 60000)
+
+    // 👉 Google Meet integration
+    if (location === "google-meet") {
+      // const auth = new google.auth.OAuth2(
+      //   process.env.GOOGLE_CLIENT_ID,
+      //   process.env.GOOGLE_CLIENT_SECRET
+      // )
+      // auth.setCredentials({ access_token, refresh_token })
+
+      // const calendar = google.calendar({ version: "v3", auth })
+
+      const calendar = await getCalendarClient(access_token, refresh_token)
+
+      // const event = await calendar.events.insert({
+      //   calendarId: "primary",
+      //   conferenceDataVersion: 1,
+      //   sendUpdates: "all",
+      //   requestBody: {
+      //     summary: title,
+      //     description: `Meeting with ${attendeeName}`,
+      //     start: {
+      //       dateTime: startTime.toISOString(),
+      //       timeZone: "Asia/Kolkata",
+      //     },
+      //     end: { dateTime: endTime.toISOString(), timeZone: "Asia/Kolkata" },
+      //     attendees: [{ email: attendeeEmail }],
+      //     conferenceData: {
+      //       createRequest: {
+      //         requestId: uuidv4(),
+      //         conferenceSolutionKey: { type: "hangoutsMeet" },
+      //       },
+      //     },
+      //   },
+      // })
+
+      const event = await createCalendarEvent(req.body, calendar)
+      meetingId = event.meetingId
+      meetingLink = event.joinUrl
+    }
+
+    // 👉 Zoom integration
+    else if (location === "zoom") {
+      // const meeting = await Zoom.createMeeting({
+      //   topic: title,
+      //   startTime,
+      //   duration,
+      // })
+
+      // const meeting = await createZoomMeetingService(req.body)
+      const dataToPass = {
+        ...req.body,
+        startTime,
+        endTime,
+        zoom_access_token,
+      }
+      const meeting = await createZoomMeetingService(dataToPass)
+
+      meetingLink = meeting.joinUrl
+      meetingId = meeting.meetingId
+    }
+
+    // Save to DB
+    const newEventBooked = await db.Booking.create({
+      eventId: eventId,
+      hostId: userId,
+      meetingId,
+      title,
+      bookingDate: date,
+      startTime,
+      endTime,
+      attendeeName,
+      attendeeEmail,
+      startTime,
+      endTime,
+      meetingLink,
+      location,
+      hostEmail,
+      attendee_notes,
+    })
+    // mail send to the user (attendee)
+    await sendConfirmationEmail(
+      attendeeEmail,
+      "Meeting Confirmation - " + title,
+      { title, joinUrl: meetingLink }
+    )
+
+    // mail send to host (admin)
+    await sendConfirmationEmail(
+      hostEmail,
+      "New Meeting Booked with - " + attendeeName,
+      { title, joinUrl: meetingLink }
+    )
+    console.log("Meeting successfully booked..")
+    res.status(200).json({
+      message: "Event booked successfully..",
+      success: true,
+      meetingId,
+      meetingLink,
+      booking: newEventBooked,
+    })
+  } catch (err) {
+    console.error("Booking error:", err.message)
+    return res
+      .status(500)
+      .json({ message: "Booking failed", error: err.message })
+  }
 }

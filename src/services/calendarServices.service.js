@@ -5,21 +5,25 @@ import { updateGoogleCalendarEvent } from "../utils/googleCalendar.utils.js"
 export const createCalendarEvent = async (data, calendar) => {
   const event = {
     summary: data.title,
-    description: data.description,
+    description: `Meeting with ${data.attendeeName}` || data.description,
     start: {
-      dateTime: data.startTime,
+      dateTime: data.startTime
+        ? new Date(data.startTime).toISOString()
+        : new Date().toISOString(),
       timeZone: data.hostTimeZone || "Asia/Kolkata",
     },
     end: {
-      dateTime: data.endTime,
+      dateTime: data.endTime
+        ? new Date(data.endTime).toISOString()
+        : new Date().toISOString(),
       timeZone: data.hostTimeZone || "Asia/Kolkata",
     },
 
-    attendees: Array.isArray(data.attendees)
-      ? data.attendees.map((email) => ({ email }))
-      : [],
+    // attendees: Array.isArray(data.attendees)
+    //   ? data.attendeeEmail.map((email) => ({ email }))
+    //   : [],
 
-    // attendees: [{ email: data.organizerEmail }],
+    attendees: [{ email: data.attendeeEmail, displayName: data.attendeeName }],
 
     conferenceData: {
       createRequest: {
@@ -50,12 +54,13 @@ export const createCalendarEvent = async (data, calendar) => {
     throw new Error("Failed to create calendar event")
   }
   console.log("response", response)
-  const savedEvent = await db.CalendarEvent.create({
-    ...data,
-    eventId: response.data.id,
-  })
+  // const savedEvent = await db.CalendarEvent.create({
+  // const savedEvent = await db.Booking.create({
+  //   ...data,
+  //   eventId: response.data.id,
+  // })
   return {
-    savedEvent,
+    // savedEvent,
     joinUrl: response.data.hangoutLink,
     meetingId: response.data.id,
   }

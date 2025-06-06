@@ -101,6 +101,8 @@ export const login = async (req, res) => {
 
     const token = await generateToken(user) // generate token
 
+    await db.User.update({ token }, { where: { email: email } })
+
     if (!token) {
       console.log("Token generation failed in local login controller")
       res.status(400).json({

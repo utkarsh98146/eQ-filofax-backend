@@ -5,7 +5,7 @@ import qs from "qs" // querystring library use for parsing nested query strings 
 
 const { zoomClientId, zoomAccountId, zoomClientSecret } = zoomApiConfig()
 
-let zoomAccessToken = null
+let zoom_access_token = null
 let zoomTokenExpiration = null
 
 // Function to get the authorization header for Zoom API requests
@@ -25,14 +25,13 @@ export const generateZoomToken = async () => {
   const now = Date.now() // Get the current time in milliseconds
   try {
     // Check if the token is already cached and not expired
-    if (zoomAccessToken && zoomTokenExpiration && now < zoomTokenExpiration) {
-      return zoomAccessToken
+    if (zoom_access_token && zoomTokenExpiration && now < zoomTokenExpiration) {
+      return { zoom_access_token }
     }
     const headers = getAuthHeader() // Get the authorization header
 
-    const reponse = await axios.post(
-      // Send a POST request to Zoom API. The URL to request the access token
-
+    // Send a POST request to Zoom API. The URL to request the access token
+    const response = await axios.post(
       `https://zoom.us/oauth/token`,
       qs.stringify({
         grant_type: "account_credentials",
@@ -42,9 +41,9 @@ export const generateZoomToken = async () => {
         headers,
       }
     )
-    zoomAccessToken = reponse.data.access_token // Store the access token
-    zoomTokenExpiration = now + reponse.data.expires_in * 1000 // Convert seconds to milliseconds
-    return zoomAccessToken // Return the access token
+    zoom_access_token = response.data.access_token // Store the access token
+    // zoomTokenExpiration = now + response.data.expires_in * 1000 // Convert seconds to milliseconds
+    return { zoom_access_token } // Return the access token
   } catch (error) {
     console.error("Error generating Zoom token:", error)
     throw new Error("Failed to generate Zoom token")
@@ -53,10 +52,10 @@ export const generateZoomToken = async () => {
 
 // Function to generate the Zoom authorization header
 export const generateZoomHeader = async () => {
-  const zoomAccessToken = await generateZoomToken()
-  console.log("The zoom access token from zoomToken utils :", zoomAccessToken)
+  const { zoom_access_token } = await generateZoomToken()
+  console.log("The zoom access token from zoomToken utils :", zoom_access_token)
   return {
-    Authorization: `Bearer ${zoomAccessToken}`, // Set the authorization header with the access token
+    Authorization: `Bearer ${zoom_access_token}`, // Set the authorization header with the access token
     "Content-Type": "application/json",
   }
 }

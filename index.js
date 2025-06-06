@@ -15,6 +15,7 @@ import { zoomApiConfig } from "./src/config/zoomApi.config.js"
 import { zoomMeetingRouter } from "./src/routers/zoomMeeting.routes.js"
 import { eventsOnDashboardRouter } from "./src/routers/eventsOnDashboard.routes.js"
 import { availabilityForEvents } from "./src/routers/availabilityForEvents.routes.js"
+import { bookingRoute } from "./src/routers/booking.routes.js"
 
 const app = express()
 dotenv.config()
@@ -64,9 +65,11 @@ app.use("/", welcomeRouter) // route for the welcome page
 
 app.use("/api/auth", authRouter) // route for the auth(Login/SignUp)
 
+app.use("/api/event", bookingRoute) // booking route for public route
+
 app.use("/api/profile", verifyToken, profileRouter) //  route for user profile
 
-app.use("/api/event-schedule", verifyToken, eventsOnDashboardRouter) // route for the events on the dashboard
+app.use("/api/event-schedule", eventsOnDashboardRouter) // route for the events on the dashboard
 
 app.use("/api/availability", verifyToken, availabilityForEvents) // route for the availability
 
@@ -80,8 +83,11 @@ app.use("/api/zoom-meeting", zoomMeetingRouter) // route for the zoom meeting
 app.listen(PORT, (req, res) => {
   console.log(`Server started at http://localhost:${PORT}`)
 })
+// console.log("Google Access token :", db.User.access_token)
+// console.log("Google Refresh token :", db.User.refresh_token)
 
 zoomApiConfig() // call the zoom api config function
+
 db.sequelize
   .sync({ alter: true })
   .then(() => {

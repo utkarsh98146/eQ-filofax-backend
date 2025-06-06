@@ -75,3 +75,11 @@ export const generateDefaultAvailability = () => {
     },
   ]
 }
+
+export const convertSlotTo24H = (slot) => {
+  const [time, ampm] = slot.split(" ")
+  let [h, m] = time.split(":").map(Number)
+  if (ampm === "PM" && h !== 12) h += 12
+  if (ampm === "AM" && h === 12) h = 0
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
+}

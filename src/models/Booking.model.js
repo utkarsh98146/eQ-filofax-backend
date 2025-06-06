@@ -17,7 +17,10 @@ export default (sequelize, DataTypes) => {
       references: { model: "Users", key: "id" },
       allowNull: false,
     },
-
+    meetingId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     // Booking time details
     bookingDate: {
       type: DataTypes.DATEONLY, // Just the date: YYYY-MM-DD
@@ -33,11 +36,11 @@ export default (sequelize, DataTypes) => {
     },
 
     // Attendee information
-    attendee_name: {
+    attendeeName: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    attendee_email: {
+    attendeeEmail: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -46,10 +49,10 @@ export default (sequelize, DataTypes) => {
     attendee_timezone: { type: DataTypes.STRING, defaultValue: "Asia/Kolkata" },
 
     // Booking details
-    status: {
-      type: DataTypes.ENUM("confirmed", "cancelled", "completed", "no_show"),
-      defaultValue: "confirmed",
-    },
+    // status: {
+    //   type: DataTypes.ENUM("confirmed", "cancelled", "completed", "no_show"),
+    //   defaultValue: "confirmed",
+    // },
 
     //   booking_reference: {
     //     type: DataTypes.STRING,
