@@ -16,7 +16,7 @@ export default (sequelize, DataTypes) => {
           key: "id",
         },
       },
-      eventTypeId: {
+      eventId: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {

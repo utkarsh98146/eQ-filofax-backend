@@ -59,10 +59,19 @@ export const createCalendarEvent = async (data, calendar) => {
   //   ...data,
   //   eventId: response.data.id,
   // })
+
+  const meetingLink =
+    response?.data?.conferenceData?.entryPoints?.find(
+      (entry) => entry.entryPointType === "video"
+    )?.uri || null
+
   return {
     // savedEvent,
-    joinUrl: response.data.hangoutLink,
+    joinUrl: meetingLink || response.data.hangoutLink,
     meetingId: response.data.id,
+    summary: response?.data?.summary,
+    eventStartTime: response?.data?.start?.dateTime,
+    eventEndTime: response?.data?.end?.dateTime,
   }
 }
 

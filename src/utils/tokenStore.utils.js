@@ -3,10 +3,10 @@ import db from "../models/index.model.js"
 export const getHostTokensFromDB = async (email, location) => {
   const user = await db.User.findOne({ where: { email } })
   if (!user) {
-    throw new Error("User does not found in databse")
+    throw new Error("User not found in database")
   }
   console.log("Email for that person :", email)
-  console.log("Detailos for that person :", user)
+  console.log("Details for that person :", user)
   if (location === "google-meet") {
     if (!user.googleAccessToken || !user.googleRefreshToken) {
       throw new Error("Google token not found for this user in database")
@@ -31,11 +31,11 @@ export const getHostTokensFromDB = async (email, location) => {
     access_token: user.googleAccessToken,
     refresh_token: user.googleRefreshToken,
 
-    // for micorsoft
+    // for microsoft
     microsoft_access_token: user.microsoftAccessToken,
     microsoft_refresh_token: user.microsoftRefreshToken,
 
     //for zoom
-    zoom_access_token: user.zoom_access_token,
+    zoom_access_token: user.zoomAccessToken,
   }
 }

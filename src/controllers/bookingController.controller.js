@@ -1,5 +1,6 @@
-import { calendar } from "googleapis/build/src/apis/calendar/index.js"
+import { Op } from "sequelize"
 import db from "../models/index.model.js"
+import { getBookingByTab } from "../services/bookingServices.service.js"
 import { createCalendarEvent } from "../services/calendarServices.service.js"
 import { sendConfirmationEmail } from "../services/emailServices.service.js"
 import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
@@ -240,20 +241,22 @@ export const bookEvent = async (req, res) => {
   console.log("book event api call")
   try {
     const {
-      userId,
       eventId,
       title,
       date,
       slot,
       duration,
-      attendeeName,
-      attendeeEmail,
+      hostId,
       hostName,
       hostEmail,
+      // hostTimeZone = "Asia/Kolkata",
       location,
+      attendeeName,
+      attendeeEmail,
       attendee_notes,
-      hostTimeZone = "Asia/Kolkata",
     } = req.body
+
+    console.log("📦 Booking Request Body:", req.body)
 
     let meetingLink = location
     let meetingId = null
@@ -265,42 +268,14 @@ export const bookEvent = async (req, res) => {
     const { access_token, refresh_token, zoom_access_token } =
       await getHostTokensFromDB(hostEmail, location)
 
-    const startTime = new Date(`${date}T${convertSlotTo24H(slot)}:00`)
-    const endTime = new Date(startTime.getTime() + duration * 60000)
+    const startTimeObj = new Date(`${date}T${convertSlotTo24H(slot)}:00`)
+    const endTimeObj = new Date(startTimeObj.getTime() + duration * 60000)
+
+    // const endTime = new Date(startTime.getTime() + duration * 60000)
 
     // 👉 Google Meet integration
     if (location === "google-meet") {
-      // const auth = new google.auth.OAuth2(
-      //   process.env.GOOGLE_CLIENT_ID,
-      //   process.env.GOOGLE_CLIENT_SECRET
-      // )
-      // auth.setCredentials({ access_token, refresh_token })
-
-      // const calendar = google.calendar({ version: "v3", auth })
-
       const calendar = await getCalendarClient(access_token, refresh_token)
-
-      // const event = await calendar.events.insert({
-      //   calendarId: "primary",
-      //   conferenceDataVersion: 1,
-      //   sendUpdates: "all",
-      //   requestBody: {
-      //     summary: title,
-      //     description: `Meeting with ${attendeeName}`,
-      //     start: {
-      //       dateTime: startTime.toISOString(),
-      //       timeZone: "Asia/Kolkata",
-      //     },
-      //     end: { dateTime: endTime.toISOString(), timeZone: "Asia/Kolkata" },
-      //     attendees: [{ email: attendeeEmail }],
-      //     conferenceData: {
-      //       createRequest: {
-      //         requestId: uuidv4(),
-      //         conferenceSolutionKey: { type: "hangoutsMeet" },
-      //       },
-      //     },
-      //   },
-      // })
 
       const event = await createCalendarEvent(req.body, calendar)
       meetingId = event.meetingId
@@ -309,17 +284,11 @@ export const bookEvent = async (req, res) => {
 
     // 👉 Zoom integration
     else if (location === "zoom") {
-      // const meeting = await Zoom.createMeeting({
-      //   topic: title,
-      //   startTime,
-      //   duration,
-      // })
-
-      // const meeting = await createZoomMeetingService(req.body)
       const dataToPass = {
         ...req.body,
-        startTime,
-        endTime,
+        startTime: startTimeObj,
+        endTime: endTimeObj,
+        hostEmail,
         zoom_access_token,
       }
       const meeting = await createZoomMeetingService(dataToPass)
@@ -327,11 +296,16 @@ export const bookEvent = async (req, res) => {
       meetingLink = meeting.joinUrl
       meetingId = meeting.meetingId
     }
+    // format times
+    const formatTime = (date) => date.toTimeString().split(" ")[0] // "HH:MM:SS"
+
+    const startTime = formatTime(startTimeObj)
+    const endTime = formatTime(endTimeObj)
 
     // Save to DB
     const newEventBooked = await db.Booking.create({
-      eventId: eventId,
-      hostId: userId,
+      eventId,
+      hostId,
       meetingId,
       title,
       bookingDate: date,
@@ -339,12 +313,10 @@ export const bookEvent = async (req, res) => {
       endTime,
       attendeeName,
       attendeeEmail,
-      startTime,
-      endTime,
+      attendee_notes,
       meetingLink,
       location,
       hostEmail,
-      attendee_notes,
     })
     // mail send to the user (attendee)
     await sendConfirmationEmail(
@@ -368,9 +340,34 @@ export const bookEvent = async (req, res) => {
       booking: newEventBooked,
     })
   } catch (err) {
-    console.error("Booking error:", err.message)
+    console.error("Booking error:", err.message || err)
     return res
       .status(500)
       .json({ message: "Booking failed", error: err.message })
+  }
+}
+
+export const getMeetingByTab = async (req, res) => {
+  console.log("get by tab api call")
+  try {
+    const { tab } = req.query
+    const hostId = req.user?.id || req.query.hostId
+
+    if (!tab || !["upcoming", "past", "pending"].includes(tab)) {
+      return res.status(400).json({ error: "Invalid tab value" })
+    }
+
+    if (!hostId) {
+      return res.status(400).json({ error: "Missing hostId" })
+    }
+
+    const bookings = await getBookingByTab(tab, hostId)
+    res.json(bookings)
+  } catch (error) {
+    console.error("Error in getMeetingByTab:", error.message || error)
+    return res.status(500).json({
+      message: "Failed to fetch meetings by tab",
+      error: error.message,
+    })
   }
 }
