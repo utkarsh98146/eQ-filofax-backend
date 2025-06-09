@@ -12,8 +12,8 @@ const DB_PORT_NO = parseInt(process.env.DATABASE_PORT_NO, 10)
 
 const dialectGroup = {
   3306: "mysql", // MySQL & MariaDB both runs same PORT
-  // 5432: "postgres", // PostgreSQL for utkash98146
-  5433: "postgres", // PostgreSQL for Acrto3Hil3
+  5432: "postgres", // PostgreSQL for utkash98146
+  // 5433: "postgres", // PostgreSQL for Acrto3Hil3
   1433: "mssql", // Microsoft SQL Server
   1521: "oracle", // Oracle
   50000: "db2", // IBM DB2
