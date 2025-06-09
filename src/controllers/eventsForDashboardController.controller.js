@@ -1,4 +1,3 @@
-import { where } from "sequelize"
 import { sequelize } from "../config/database.config.js"
 import db from "../models/index.model.js"
 import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
@@ -99,7 +98,7 @@ export const createEventTypeOnDashboard = async (req, res) => {
     // Create time slots
     if (timeSlots && timeSlots.length > 0) {
       const timeSlotData = timeSlots.map((slot) => ({
-        eventTypeId: eventType.id,
+        eventId: eventType.id,
         daysOfWeek: slot.daysOfWeek,
         startTime: slot.startTime,
         endTime: slot.endTime,
@@ -210,14 +209,14 @@ export const updateEventTypeOnDashboard = async (req, res) => {
     if (timeSlots) {
       // Delete existing time slots
       await db.TimeSlot.destroy({
-        where: { eventTypeId: event.id },
+        where: { eventId: event.id },
         transaction,
       })
 
       // Create new time slots
       if (timeSlots.length > 0) {
         const timeSlotData = timeSlots.map((slot) => ({
-          eventTypeId: event.id,
+          eventId: event.id,
           daysOfWeek: slot.daysOfWeek,
           startTime: slot.startTime,
           endTime: slot.endTime,
@@ -369,7 +368,7 @@ export const deleteEventTypeOnDashboard = async (req, res) => {
     // Check if there are future bookings
     const futureBookings = await db.Booking.count({
       where: {
-        eventTypeId: event.id,
+        eventId: event.id,
         booking_date: {
           [Op.gte]: new Date().toISOString().split("T")[0],
         },
@@ -386,7 +385,7 @@ export const deleteEventTypeOnDashboard = async (req, res) => {
 
     // Delete time slots first (due to foreign key constraint)
     await db.TimeSlot.destroy({
-      where: { eventTypeId: event.id },
+      where: { eventId: event.id },
       transaction,
     })
 

@@ -83,3 +83,7 @@ export const convertSlotTo24H = (slot) => {
   if (ampm === "AM" && h === 12) h = 0
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
+
+export const getCombinedDateTime = (date, time) => {
+  return new Date(`${date}T${time}`)
+}

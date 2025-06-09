@@ -1,7 +1,7 @@
+import axios from "axios"
 import { zoomApiConfig } from "../config/zoomApi.config.js"
 import db from "../models/index.model.js"
 import { generateZoomHeader } from "../utils/generateZoomToken.utils.js"
-import axios from "axios"
 
 const { zoomAccountId } = zoomApiConfig()
 
@@ -38,8 +38,7 @@ export const createZoomMeetingService = async (data) => {
         audio: "both",
         contact_name: data.hostName || "Utkarsh",
         contact_email: data.hostEmail || "subhashyadav.equasar@gmail.com",
-        alternative_hosts:
-          data.alternative_hosts || "subhashyadav.equasar@gmail.com",
+        // alternative_hosts: data.alternative_hosts || "admin@test.com",
         email_reminder: true,
         email_reminder_time: 2,
         allow_multiple_devices: true,
@@ -50,42 +49,23 @@ export const createZoomMeetingService = async (data) => {
     }
 
     const response = await axios.post(
-      `${ZOOM_BASE_URL}/users/${zoomAccountId}/meetings`,
+      // `${ZOOM_BASE_URL}/users/${zoomAccountId}/meetings`,
+      `${ZOOM_BASE_URL}/users/${data.hostEmail}/meetings`,
       meetingData,
       {
         headers,
       }
     )
     // format end time based on start time and duration
-    const startTime = data.startTime
+    const startTime = new Date(data.startTime)
     const endTime = new Date(
       startTime.getTime() + meetingData.duration * 60 * 1000
     )
 
-    // Save the meeting data to the database
-    // const savedMeetingInDB = await db.ZoomMeeting.create({
-    //   id: response.data.id,
-    //   title: response.data.topic,
-    //   startTime: response.data.start_time,
-    //   endTime: endTime,
-    //   duration: response.data.duration,
-    //   eventType: meetingData.eventType,
-    //   location: "Zoom",
-    //   hostTimezone: response.data.timezone || "Asia/Kolkata",
-    //   agenda: response.data.agenda,
-    //   password: response.data.password,
-    //   hostId: meetingData.hostId,
-    //   hostName: meetingData.hostName || "Utkarsh",
-    //   hostEmail: meetingData.hostEmail || "subhashyadav.eqauasar@gmail.com",
-    //   joinUrl: response.data.join_url,
-    //   attendees: meetingData.attendees,
-    //   status: "scheduled",
-    // })
-
     // Return the created meeting data
     return {
       // zoomMeetingDeatails: response.data, // Zoom meeting details
-      // zoomMeetingDeatailsInDB: savedMeetingInDB, // Saved meeting details in the database
+
       joinUrl: response.data.join_url, // Join URL for the meeting
       meetingId: response.data.id, // Meeting ID
     }
