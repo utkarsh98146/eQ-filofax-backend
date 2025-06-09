@@ -1,6 +1,6 @@
 // import { google } from "@googleapis/calendar"
-import { google } from "googleapis"
 import dotenv from "dotenv"
+import { google } from "googleapis"
 dotenv.config()
 
 const scopes = [

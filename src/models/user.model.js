@@ -75,24 +75,52 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
       },
-      googleAccessToken: DataTypes.STRING,
-      googleRefreshToken: DataTypes.STRING,
-      microsoftAccessToken: DataTypes.STRING,
-      microsoftRefreshToken: DataTypes.STRING,
+      // jwt token
+      token: DataTypes.TEXT,
 
-      accessToken: {
+      // google token
+      googleAccessToken: DataTypes.TEXT,
+      googleRefreshToken: DataTypes.TEXT,
+
+      // microsoft token
+      microsoftAccessToken: DataTypes.TEXT,
+      microsoftRefreshToken: DataTypes.TEXT,
+
+      // zoom token
+      zoom_access_token: {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      refreshToken: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
+      // zoom_access_token_expires: {
+      //   type: DataTypes.DATE,
+      //   allowNull: true,
+      // },
+      // accessToken: {
+      //   type: DataTypes.TEXT,
+      //   allowNull: true,
+      // },
+      // refreshToken: {
+      //   type: DataTypes.TEXT,
+      //   allowNull: true,
+      // },
       lastLogin: {
         type: DataTypes.DATE,
       },
       lastLoginMethod: {
         type: DataTypes.ENUM("local", "google", "microsoft"),
+      },
+      welcomeMessage: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: "Welcome to my profile",
+      },
+      dateFormat: {
+        type: DataTypes.STRING,
+        defaultValue: "YYYY/MM/DD",
+      },
+      timeFormat: {
+        type: DataTypes.STRING,
+        defaultValue: "12h",
       },
       timezone: {
         type: DataTypes.STRING,

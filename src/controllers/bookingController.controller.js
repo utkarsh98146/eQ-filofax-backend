@@ -1,12 +1,18 @@
+import { Op } from "sequelize"
 import db from "../models/index.model.js"
+import { getBookingByTab } from "../services/bookingServices.service.js"
 import { createCalendarEvent } from "../services/calendarServices.service.js"
+import { sendConfirmationEmail } from "../services/emailServices.service.js"
 import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
 import { createZoomMeetingService } from "../services/zoomServices.service.js"
+import { getCalendarClient } from "../utils/googleCalendar.utils.js"
+import { convertSlotTo24H } from "../utils/timeUtility.utils.js"
+import { getHostTokensFromDB } from "../utils/tokenStore.utils.js"
 
 // get available slots of an event for admin
 export const getAvailableSlotsForEvent = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken() // Check if the user is authenticated
+    const { userId } = await checkUserThroughToken() // Check if the user is authenticated
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -45,7 +51,7 @@ export const getAvailableSlotsForEvent = async (req, res) => {
 //reserve a slot for an event
 export const reserveSlotForEvent = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken() // Check if the user is authenticated
+    const { userId } = await checkUserThroughToken() // Check if the user is authenticated
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -98,7 +104,7 @@ export const reserveSlotForEvent = async (req, res) => {
 // Book a reserved slot for an event
 export const confirmBookingForEvent = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken() // Check if the user is authenticated
+    const { userId } = await checkUserThroughToken() // Check if the user is authenticated
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -161,23 +167,206 @@ export const confirmBookingForEvent = async (req, res) => {
       location: platform === "zoom" ? platform : "google-meet",
       userId: userId,
       timeSlotId: slot.id,
+      joinUrl: meeting.joinUrl,
       eventId: meeting ? meeting.id : null, // Store the meeting ID if available
     })
-      slot.status = "booked" // Update the slot status to 'booked'
+    slot.status = "booked" // Update the slot status to 'booked'
+    slot.reservedUntill = null
+    slot.bookedBy = userId // Store the ID of the user who booked the slot
+    await slot.save()
+    console.log("Booking confirmed successfully:", event)
 
-      slot.bookedBy = userId // Store the ID of the user who booked the slot
-      await slot.save()
-      console.log("Booking confirmed successfully:", event)
-      
+    // Send confirmation email to the user and admin
+    const admin = await db.User.findByPk(slot.availability.userId)
 
-      // Send confirmation email to the user and admin
-      const admin = await db.User.findByPk(slot.availability.userId)
-      
-      await 
+    await sendConfirmationEmail({
+      to: email,
+      subject: "Your meeting is scheduled",
+      event,
+    })
+
+    await sendConfirmationEmail({
+      to: admin.email,
+      subject: "A meeting was booked ",
+      event,
+    })
+
+    res.status(201).json({
+      message: "Meeting scheduled successfully..",
+      event,
+    })
   } catch (error) {
     console.error("Error confirming booking for event:", error)
     return res.status(500).json({
       message: "Error confirming booking for event in bookingController",
+      error: error.message,
+    })
+  }
+}
+
+/*--------------------- Optional feature ----------*/
+
+// Release a slot (if user cancel the meeting)
+export const releaseSlot = async (req, res) => {
+  try {
+    const { slotId } = req.body
+
+    const slotDetails = await db.TimeSlot.findByPk(slotId)
+
+    if (slotDetails && slotDetails.status === "reserved") {
+      slotDetails.status = "available"
+      slotDetails.reservedUntill = null
+      await slotDetails.save()
+    }
+    res.status(200).json({ message: "Slot released", success: true })
+  } catch (error) {
+    console.log("Error in releasing the time slot from booking controller")
+    res.status(500).json({
+      success: false,
+      message: "Error while releasing the book timeSlot",
+      error: error.message,
+    })
+  }
+}
+
+// Auto release expired reservations
+export const releaseExpiredReservations = async (req, res) => {
+  await db.TimeSlot.update(
+    { status: "available", reservedUntill: null },
+    { where: { status: "reserved", reservedUntill: { [Op.lt]: new Date() } } }
+  )
+}
+
+export const bookEvent = async (req, res) => {
+  console.log("book event api call")
+  try {
+    const {
+      eventId,
+      title,
+      date,
+      slot,
+      duration,
+      hostId,
+      hostName,
+      hostEmail,
+      // hostTimeZone = "Asia/Kolkata",
+      location,
+      attendeeName,
+      attendeeEmail,
+      attendee_notes,
+    } = req.body
+
+    console.log("📦 Booking Request Body:", req.body)
+
+    let meetingLink = location
+    let meetingId = null
+    console.log(
+      `Email  ${hostEmail}, and location in bokking page from host :${location}`
+    )
+
+    // Fetch tokens from DB (assume you store them)
+    const { access_token, refresh_token, zoom_access_token } =
+      await getHostTokensFromDB(hostEmail, location)
+
+    const startTimeObj = new Date(`${date}T${convertSlotTo24H(slot)}:00`)
+    const endTimeObj = new Date(startTimeObj.getTime() + duration * 60000)
+
+    // const endTime = new Date(startTime.getTime() + duration * 60000)
+
+    // 👉 Google Meet integration
+    if (location === "google-meet") {
+      const calendar = await getCalendarClient(access_token, refresh_token)
+
+      const event = await createCalendarEvent(req.body, calendar)
+      meetingId = event.meetingId
+      meetingLink = event.joinUrl
+    }
+
+    // 👉 Zoom integration
+    else if (location === "zoom") {
+      const dataToPass = {
+        ...req.body,
+        startTime: startTimeObj,
+        endTime: endTimeObj,
+        hostEmail,
+        zoom_access_token,
+      }
+      const meeting = await createZoomMeetingService(dataToPass)
+
+      meetingLink = meeting.joinUrl
+      meetingId = meeting.meetingId
+    }
+    // format times
+    const formatTime = (date) => date.toTimeString().split(" ")[0] // "HH:MM:SS"
+
+    const startTime = formatTime(startTimeObj)
+    const endTime = formatTime(endTimeObj)
+
+    // Save to DB
+    const newEventBooked = await db.Booking.create({
+      eventId,
+      hostId,
+      meetingId,
+      title,
+      bookingDate: date,
+      startTime,
+      endTime,
+      attendeeName,
+      attendeeEmail,
+      attendee_notes,
+      meetingLink,
+      location,
+      hostEmail,
+    })
+    // mail send to the user (attendee)
+    await sendConfirmationEmail(
+      attendeeEmail,
+      "Meeting Confirmation - " + title,
+      { title, joinUrl: meetingLink }
+    )
+
+    // mail send to host (admin)
+    await sendConfirmationEmail(
+      hostEmail,
+      "New Meeting Booked with - " + attendeeName,
+      { title, joinUrl: meetingLink }
+    )
+    console.log("Meeting successfully booked..")
+    res.status(200).json({
+      message: "Event booked successfully..",
+      success: true,
+      meetingId,
+      meetingLink,
+      booking: newEventBooked,
+    })
+  } catch (err) {
+    console.error("Booking error:", err.message || err)
+    return res
+      .status(500)
+      .json({ message: "Booking failed", error: err.message })
+  }
+}
+
+export const getMeetingByTab = async (req, res) => {
+  console.log("get by tab api call")
+  try {
+    const { tab } = req.query
+    const hostId = req.user?.id || req.query.hostId
+
+    if (!tab || !["upcoming", "past", "pending"].includes(tab)) {
+      return res.status(400).json({ error: "Invalid tab value" })
+    }
+
+    if (!hostId) {
+      return res.status(400).json({ error: "Missing hostId" })
+    }
+
+    const bookings = await getBookingByTab(tab, hostId)
+    res.json(bookings)
+  } catch (error) {
+    console.error("Error in getMeetingByTab:", error.message || error)
+    return res.status(500).json({
+      message: "Failed to fetch meetings by tab",
       error: error.message,
     })
   }

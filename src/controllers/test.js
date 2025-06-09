@@ -14,7 +14,7 @@ import {
 export const createZoomMeetingController = async (req, res) => {
   try {
     console.log("Inside the create zoom meeting controller")
-    const { userId } = checkUserThroughToken(req) // destructure the userId from the request object
+    const { userId } =await  checkUserThroughToken(req) // destructure the userId from the request object
     if (!userId) {
       return res.status(401).json({
         status: "error",
@@ -84,7 +84,7 @@ export const createZoomMeetingController = async (req, res) => {
 // get all zoom meetings controller
 export const getAllZoomMeetingsController = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken(req) // destructure the userId from the request object
+    const { userId } =await checkUserThroughToken(req) // destructure the userId from the request object
     if (!userId) {
       return res.status(401).json({
         status: "error",
@@ -121,7 +121,7 @@ export const getAllZoomMeetingsController = async (req, res) => {
 // update zoom meeting controller
 export const updateZoomMeetingController = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken(req) // destructure the userId from the request object
+    const { userId } =await checkUserThroughToken(req) // destructure the userId from the request object
     if (!userId) {
       return res.status(401).json({
         status: "error",

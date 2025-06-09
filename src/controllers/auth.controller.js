@@ -2,9 +2,7 @@
 
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
-// import { User } from "../models/user.model.js"
 import bcrypt from "bcrypt"
-
 import db from "../models/index.model.js"
 import { generateToken } from "../services/jwt_tokenServices.service.js"
 dotenv.config()
@@ -102,6 +100,8 @@ export const login = async (req, res) => {
     }
 
     const token = await generateToken(user) // generate token
+
+    await db.User.update({ token }, { where: { email: email } })
 
     if (!token) {
       console.log("Token generation failed in local login controller")

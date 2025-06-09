@@ -49,15 +49,22 @@ router.get(
   }),
   async (req, res) => {
     try {
-      const { googleAccessToken, googleRefreshToken } = req.user
+      const { googleId, googleAccessToken, googleRefreshToken } = req.user
 
-      console.log("Access Token:", googleAccessToken)
-      console.log("Refresh Token:", googleRefreshToken)
+      console.log(
+        "Google Access Token before jwt generate :",
+        googleAccessToken
+      )
+      console.log(
+        "Google Refresh Token before jwt generate :",
+        googleRefreshToken
+      )
       console.log("The details from the req.user : ", req.user)
+      const token = await generateToken(req.user)
       // Save this into DB
       await db.User.update(
-        { googleAccessToken, googleRefreshToken },
-        { where: { id: req.user.id } }
+        { token, googleId, googleAccessToken, googleRefreshToken },
+        { where: { email: req.user.email } }
       )
 
       // testing purpose
@@ -67,16 +74,24 @@ router.get(
 
       // "https://filo-fax-frontend-wkdx.vercel.app"
 
-      const token = await generateToken(req.user)
-
       if (token || googleAccessToken || googleRefreshToken) {
         console.log("Token when enter in if block for redirect : ", token)
 
-        console.log("Access Token:", googleAccessToken)
-        console.log("Refresh Token:", googleRefreshToken)
+        console.log(
+          "Google Access Token after jwt generate :",
+          googleAccessToken
+        )
+        console.log(
+          "Google Refresh Token after jwt generate :",
+          googleRefreshToken
+        )
         console.log(
           "in the google/callback the token condition verifys now dashboard open"
         )
+        console.warn(
+          `${FRONTEND_URL}/google/callback?token=${token || ""}&access_token=${googleAccessToken || ""}&refresh_token=${googleRefreshToken || ""}`
+        )
+
         res.redirect(
           `${FRONTEND_URL}/google/callback?token=${token || ""}&access_token=${googleAccessToken || ""}&refresh_token=${googleRefreshToken || ""}`
         )

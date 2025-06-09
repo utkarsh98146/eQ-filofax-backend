@@ -1,3 +1,4 @@
+import db from "../models/index.model.js"
 import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
 import {
   createZoomMeetingService,
@@ -6,13 +7,14 @@ import {
   getZoomMeetingById,
   updateZoomMeetingService,
 } from "../services/zoomServices.service.js"
+import { generateZoomToken } from "../utils/generateZoomToken.utils.js"
 
 // create zoom meeting controller
 export const createZoomMeetingController = async (req, res) => {
   try {
     console.log("Inside the create zoom meeting controller")
 
-    const { userId } = checkUserThroughToken(req) // destructure the userId from the request object
+    const { userId } = await checkUserThroughToken(req) // destructure the userId from the request object
     if (!userId) {
       return res.status(401).json({
         status: "error",
@@ -26,17 +28,20 @@ export const createZoomMeetingController = async (req, res) => {
       start_time: req.body.startTime,
       duration: req.body.duration,
       timezone: req.body.hostTimezone || "Asia/Kolkata",
-      agenda: req.body.description,
+      agenda: req.body.title || req.body.description,
       password: req.body.password || "123456",
       hostId: userId,
       hostName: req.body.hostName,
       hostEmail: req.body.hostEmail,
-      attendees: req.body.attendees || [],
-      eventType: req.body.eventType || "description",
+      attendeeName: req.body.attendeeName || [],
+      attendeeEmail: req.body.attendeeEmail || [],
+      eventType: req.body.eventType || "one-on-one",
     }
 
     // Await the creation of the Zoom meeting
-    const { zoomMeetingDeatails, zoomMeetingDeatailsInDB } =
+    // const { zoomMeetingDeatails, zoomMeetingDeatailsInDB } =
+    //   await createZoomMeetingService(meetingDetails)
+    const { zoomMeetingDeatails } =
       await createZoomMeetingService(meetingDetails)
 
     if (!createdData) {
@@ -65,7 +70,7 @@ export const createZoomMeetingController = async (req, res) => {
 // get all zoom meetings controller
 export const getAllZoomMeetingsController = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken(req) // destructure the userId from the request object
+    const { userId } = await checkUserThroughToken(req) // destructure the userId from the request object
     if (!userId) {
       return res.status(401).json({
         status: "error",
@@ -102,7 +107,7 @@ export const getAllZoomMeetingsController = async (req, res) => {
 // update zoom meeting controller
 export const updateZoomMeetingController = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken(req) // destructure the userId from the request object
+    const { userId } = await checkUserThroughToken(req) // destructure the userId from the request object
     if (!userId) {
       return res.status(401).json({
         status: "error",
@@ -149,7 +154,7 @@ export const updateZoomMeetingController = async (req, res) => {
 // get zoom meeting by id controller
 export const getZoomMeetingByIdController = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken(req) // destructure the userId from the request object
+    const { userId } = await checkUserThroughToken(req) // destructure the userId from the request object
     if (!userId) {
       return res.status(401).json({
         status: "error",
@@ -183,7 +188,7 @@ export const getZoomMeetingByIdController = async (req, res) => {
 // delete zoom meeting by id controller
 export const deleteZoomMeetingByIdController = async (req, res) => {
   try {
-    const { userId } = checkUserThroughToken(req) // destructure the userId from the request object
+    const { userId } = await checkUserThroughToken(req) // destructure the userId from the request object
     if (!userId) {
       return res.status(401).json({
         status: "error",
@@ -226,7 +231,7 @@ export const addAttendeesIntoDbThroughZoomMeetingController = async (
   res
 ) => {
   try {
-    const { userId } = checkUserThroughToken(req) // destructure the userId from the request object
+    const { userId } = await checkUserThroughToken(req) // destructure the userId from the request object
     if (!userId) {
       return res.status(401).json({
         status: "error",
@@ -266,5 +271,39 @@ export const addAttendeesIntoDbThroughZoomMeetingController = async (
         "Failed to add attendees into db through zoom meeting controller",
       error: error.message,
     })
+  }
+}
+
+// connect to zoom
+export const connectZoom = async (req, res) => {
+  try {
+    const { zoom_access_token } = await generateZoomToken()
+
+    const { userId } = await checkUserThroughToken(req)
+
+    if (userId) {
+      const user = await db.User.findByPk(userId)
+      if (user) {
+        await user.update({
+          zoom_access_token: zoom_access_token,
+          // zoom_access_token_expires: new Date(Date.now() + 6 * 3600 * 1000),
+        })
+      } else {
+        // Handle case where user doesn't exist
+        console.error("User not found:", userId)
+      }
+    }
+    console.log("Zoom token", zoom_access_token)
+
+    res.status(200).json({
+      success: true,
+      message: "You are connect to zoom ",
+      zoom_access_token,
+    })
+  } catch (error) {
+    console.error("Zoom connect error:", error)
+    return res
+      .status(500)
+      .json({ success: false, message: "Zoom connection failed" })
   }
 }

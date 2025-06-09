@@ -3,11 +3,16 @@ import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
 
 // get the profile data controller
 export const profileDetailsController = async (req, res) => {
+  console.log("Get Profile data api called...")
+
   try {
     console.log(`The details from token extracting `, req.user)
-    const { userId } = checkUserThroughToken(req) // destructure the userId from the request object
 
+    const { userId } = await checkUserThroughToken(req) // destructure the userId from the request object
+
+    // console.log(" After extracting the userId :", userId)
     const user = await db.User.findByPk(userId) // find the user by id
+
     console.log(`User details after fetching through token :`, user)
     res.status(200).json({
       message: " Data for the profile send successfully..",
@@ -34,18 +39,27 @@ export const profileDetailsController = async (req, res) => {
 
 // update the profile data controller
 export const updateProfileDetailsController = async (req, res) => {
+  console.log(" Update profile api called...")
   try {
-    console.log(`The details from token extracting `, req.user)
-    const { userId } = checkUserThroughToken(req) // destructure the userId from the request object
+    // console.log(`The details from token extracting `, req.user)
+
+    const { userId } = await checkUserThroughToken(req) // destructure the userId from the request object
+
+    // console.log(" now ", userId)
 
     const user = await db.User.findByPk(userId) // find the user by id
+
     if (!user) {
       return res.status(404).json({
         message: "User not found",
         success: false,
       })
     }
-    console.log(`User details after fetching through token :`, user)
+
+    // console.log(`User details after fetching through token :`, user)
+
+    console.log(`The client data : , ${req.body}`)
+
     const { name, email, phoneNumber, profileImageLink } = req.body // destructure the data from the request body
 
     user.name = name ?? user.name // update the user name
@@ -79,8 +93,10 @@ export const updateProfileDetailsController = async (req, res) => {
 
 // delete the profile data controller
 export const deleteProfileDetailsController = async (req, res) => {
+  console.log("Delete profile api called..")
+
   try {
-    const { userId } = checkUserThroughToken(req) // destructure the userId from the request object
+    const { userId } = await checkUserThroughToken(req) // destructure the userId from the request object
     const user = await db.User.findByPk(userId) // find the user by id
     if (!user) {
       return res.status(404).json({

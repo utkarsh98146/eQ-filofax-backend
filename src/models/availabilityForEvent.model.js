@@ -31,11 +31,19 @@ export default (sequelize, DataTypes) => {
       },
       daysOfWeek: {
         // no of days in week to available
-        type: DataTypes.STRING,
+        type: DataTypes.ENUM(
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday"
+        ),
         allowNull: false,
       },
       startTime: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: false,
         validate: {
           min: 0,
@@ -43,7 +51,7 @@ export default (sequelize, DataTypes) => {
         },
       },
       endTime: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: false,
         validate: {
           min: 0,
