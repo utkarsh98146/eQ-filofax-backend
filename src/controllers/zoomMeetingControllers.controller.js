@@ -1,4 +1,7 @@
+import axios from "axios"
 import db from "../models/index.model.js"
+import qs from "qs"
+import jwt from "jsonwebtoken"
 import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
 import {
   createZoomMeetingService,
@@ -8,6 +11,15 @@ import {
   updateZoomMeetingService,
 } from "../services/zoomServices.service.js"
 import { generateZoomToken } from "../utils/generateZoomToken.utils.js"
+
+const {
+  ZOOM_ACCOUNT_ID,
+  ZOOM_CLIENT_ID,
+  ZOOM_CLIENT_SECRET,
+  ZOOM_REDIRECT_URI,
+  ZOOM_OAUTH_URL,
+  ZOOM_TOKEN_URL,
+} = process.env
 
 // create zoom meeting controller
 export const createZoomMeetingController = async (req, res) => {
@@ -275,35 +287,146 @@ export const addAttendeesIntoDbThroughZoomMeetingController = async (
 }
 
 // connect to zoom
-export const connectZoom = async (req, res) => {
+// export const connectZoom = async (req, res) => {
+//   try {
+//     const { zoom_access_token } = await generateZoomToken()
+
+//     const { userId } = await checkUserThroughToken(req)
+
+//     if (userId) {
+//       const user = await db.User.findByPk(userId)
+//       if (user) {
+//         await user.update({
+//           zoom_access_token: zoom_access_token,
+//           // zoom_access_token_expires: new Date(Date.now() + 6 * 3600 * 1000),
+//         })
+//       } else {
+//         // Handle case where user doesn't exist
+//         console.error("User not found:", userId)
+//       }
+//     }
+//     console.log("Zoom token", zoom_access_token)
+
+//     res.status(200).json({
+//       success: true,
+//       message: "You are connect to zoom ",
+//       zoom_access_token,
+//     })
+//   } catch (error) {
+//     console.error("Zoom connect error:", error)
+//     return res
+//       .status(500)
+//       .json({ success: false, message: "Zoom connection failed" })
+//   }
+// }
+
+export const zoomConnect = async (req, res) => {
+  console.log("Try to connect the zoom")
+  console.log("req.user:", req.user) // 🆕 ADD: Debug log
+  // console.log("req.body:", req.body) // 🆕 ADD: Debug log
   try {
-    const { zoom_access_token } = await generateZoomToken()
+    const userId = req.user.userId
+    const { email } = req.body
 
-    const { userId } = await checkUserThroughToken(req)
-
-    if (userId) {
-      const user = await db.User.findByPk(userId)
-      if (user) {
-        await user.update({
-          zoom_access_token: zoom_access_token,
-          // zoom_access_token_expires: new Date(Date.now() + 6 * 3600 * 1000),
-        })
-      } else {
-        // Handle case where user doesn't exist
-        console.error("User not found:", userId)
-      }
+    // 🆕 ADD: Check if user already has zoom token
+    const user = await db.User.findByPk(userId)
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found",
+        success: false,
+      })
     }
-    console.log("Zoom token", zoom_access_token)
+    // 🆕 ADD: Check if user already connected to Zoom
+    if (user.zoom_access_token) {
+      return res.status(200).json({
+        success: true,
+        alreadyConnected: true,
+        message: "Already connected to Zoom",
+      })
+    }
+    const stateToken = jwt.sign({ userId }, process.env.JWT_SECRET_KEY, {
+      expiresIn: "10m",
+    })
+    const redirectUrl = `${ZOOM_OAUTH_URL}?response_type=code&client_id=${ZOOM_CLIENT_ID}&redirect_uri=${encodeURIComponent(ZOOM_REDIRECT_URI)}&state=${stateToken}`
+
+    // res.redirect(redirectUrl)
 
     res.status(200).json({
       success: true,
-      message: "You are connect to zoom ",
-      zoom_access_token,
+      redirectUrl,
+      alreadyConnected: false,
+      message: "Redirect to this URL to authorize Zoom",
     })
   } catch (error) {
-    console.error("Zoom connect error:", error)
-    return res
-      .status(500)
-      .json({ success: false, message: "Zoom connection failed" })
+    console.log("Error while connect to zoom", error)
+    res.status(500).json({
+      message: "Error while coonectin got zoom ",
+      error: error.message,
+      success: false,
+    })
+  }
+}
+
+export const zoomCallback = async (req, res) => {
+  const { code, state } = req.query
+  try {
+    // Verify JWT token from state
+    const decoded = jwt.verify(state, process.env.JWT_SECRET_KEY)
+    const userId = decoded.userId
+
+    const user = await db.User.findByPk(userId)
+
+    if (!user)
+      return res.status(400).json({ message: "User not found", success: false })
+
+    const payload = {
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: ZOOM_REDIRECT_URI,
+    }
+
+    const response = await axios.post(ZOOM_TOKEN_URL, qs.stringify(payload), {
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${ZOOM_CLIENT_ID}:${ZOOM_CLIENT_SECRET}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    })
+
+    const { access_token } = response.data
+
+    user.zoom_access_token = access_token
+
+    await user.save()
+
+    const jwtToken = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        userId: user.id,
+      },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "7d" }
+    )
+    res.cookie("zoom_access_token", access_token, {
+      httpOnly: false, // frontend needs to access it via js-cookie
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    })
+
+    // Redirect to frontend with both JWT + Zoom token in URL or cookie
+    // const frontendRedirect = `http://localhost:3000/zoom-success?token=${state}&zoom_access_token${zoom_access_token}`
+    // return res.redirect(frontendRedirect)
+
+    return res.redirect(
+      `http://localhost:3002/zoom-success?zoom_access_token=${access_token}&token=${jwtToken}&success=true`
+    )
+  } catch (error) {
+    console.error(
+      "Zoom callback error : ",
+      error.response?.data || error.message
+    )
+    return res.status(500).json({ message: "Zoom OAuth failed" })
   }
 }

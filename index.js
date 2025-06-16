@@ -16,6 +16,8 @@ import { zoomMeetingRouter } from "./src/routers/zoomMeeting.routes.js"
 import { eventsOnDashboardRouter } from "./src/routers/eventsOnDashboard.routes.js"
 import { availabilityForEvents } from "./src/routers/availabilityForEvents.routes.js"
 import { bookingRoute } from "./src/routers/booking.routes.js"
+import path from "path"
+import rateLimit from "express-rate-limit"
 
 const app = express()
 dotenv.config()
@@ -25,7 +27,13 @@ const PORT = parseInt(process.env.SERVER_PORT, 10) || 3000
 //allow the frontend to access the backend
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    // origin: [
+    //   "http://localhost:5173",
+    //   "http://localhost:3000",
+    //   "http://localhost:3002",
+    //   "http://127.0.0.1:5500",
+    // ],
+    origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
@@ -52,12 +60,25 @@ app.use(
   })
 )
 
+// Rate limiting middleware to prevent abuse
+const limiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes by default
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // 100 requests by default
+  message: {
+    error: "Too many requsts from this IP,please try again later.",
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+})
+
 //*-*-*-*- Initialize Passport to authenticate users *-*-*-*--*-*-*-*-*-*-*-*-*-*-*-*-*---*-*--*-/
 
 app.use(passport.initialize()) // initialize the passoword lib
 
 // it will use the session to store the user information and integrate with passport-session,as the user information is stored in the session as they logged in
 app.use(passport.session())
+
+//app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 /*--*-*-*-*-*-*-*-*-*-*-*-*-* Define the routes---*-*-*-*-*-*-*-*-*-*-*-*-*---*-*-*-*-*-*-*-*-*-*-*-*-*  */
 

@@ -38,6 +38,8 @@ export const decodeToken = (token) => {
 export const checkUserThroughToken = async (req, res) => {
   console.log(`The details from token extracting in token service `, req.user)
   const { userId } = req.user // destructure the userId from the request object
+  console.log("UserId in checkToken function ", userId)
+
   if (!userId) {
     return res.status(403).json({
       message: "Unauthorized Access, you don't have permission",

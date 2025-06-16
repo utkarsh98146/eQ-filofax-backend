@@ -1,3 +1,4 @@
+import { Op } from "sequelize"
 import { sequelize } from "../config/database.config.js"
 import db from "../models/index.model.js"
 import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
@@ -168,27 +169,6 @@ export const updateEventTypeOnDashboard = async (req, res) => {
         .status(404)
         .json({ message: "Event not found with this event id : ", id })
     }
-    /*
-    // if name change then slug will change
-   
-    let slug = event.bookingUrl
-    if (eventType && eventType !== event.eventType) {
-      const baseSlug = slugify(eventType)
-    }
-    slug = baseSlug
-    let counter = 1
-    while (
-      await db.EventType.findOne({
-        where: {
-          userId,
-          id,
-        },
-      })
-    ) {
-      slug = `${baseSlug}-${counter}`
-      counter++
-    }
-    */
 
     // update the event type
     const updatedEvent = await event.update(
@@ -352,7 +332,9 @@ export const deleteEventTypeOnDashboard = async (req, res) => {
 
   const transaction = await sequelize.transaction()
   try {
-    const { userId } = checkUserThroughToken(req) // extract token
+    const { userId } = await checkUserThroughToken(req) // extract token
+    console.log("UserId in the delete event api ", userId)
+
     const { id } = req.params
     const event = await db.EventType.findOne({
       where: {
@@ -369,7 +351,7 @@ export const deleteEventTypeOnDashboard = async (req, res) => {
     const futureBookings = await db.Booking.count({
       where: {
         eventId: event.id,
-        booking_date: {
+        bookingDate: {
           [Op.gte]: new Date().toISOString().split("T")[0],
         },
         status: "confirmed",

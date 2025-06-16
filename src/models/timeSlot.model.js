@@ -24,22 +24,30 @@ export default (sequelize, DataTypes) => {
           key: "id",
         },
       },
+      dayOfWeek: {
+        type: DataTypes.ENUM("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"),
+        allowNull: false,
+      },
       startTime: {
-        type: DataTypes.DATE,
+        type: DataTypes.STRING, // Store as "09:00am" format
         allowNull: false,
       },
       endTime: {
-        type: DataTypes.DATE,
+        type: DataTypes.STRING, // Store as "05:00pm" format
         allowNull: false,
       },
-      status: {
-        type: DataTypes.ENUM("reserved", "available", "booked"),
-        defaultValue: "available",
+      isAvailable: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
       },
-      reservedUntill: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
+      // status: {
+      //   type: DataTypes.ENUM("reserved", "available", "booked"),
+      //   defaultValue: "available",
+      // },
+      // reservedUntill: {
+      //   type: DataTypes.DATE,
+      //   allowNull: true,
+      // },
     },
     {
       timestamps: true,

@@ -16,22 +16,6 @@ router.post("/local-login", login)
 
 /* when google button click it work*/
 
-/*router.get("/google", (req, res) => {
-  const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&scope=profile`
-  // const source = req.query.source || 'web'; // Default to 'web' if no source is provided
-  // const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=email%20profile%20openid&prompt=select_account&state=${source}`;
-
-  res.status(200).json({ redirectUrl: googleAuthUrl })
-})
-
-router.get(
-  "/google/callback",
-  passport.authenticate("google", { session: false }),
-  sendToken
-)
-*/
-
-/* when google button click it work*/
 router.get(
   "/google",
   passport.authenticate("google", {
@@ -72,8 +56,6 @@ router.get(
 
       const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173"
 
-      // "https://filo-fax-frontend-wkdx.vercel.app"
-
       if (token || googleAccessToken || googleRefreshToken) {
         console.log("Token when enter in if block for redirect : ", token)
 
@@ -91,15 +73,10 @@ router.get(
         console.warn(
           `${FRONTEND_URL}/google/callback?token=${token || ""}&access_token=${googleAccessToken || ""}&refresh_token=${googleRefreshToken || ""}`
         )
-
+        // testing purpose for frontend callback
         res.redirect(
           `${FRONTEND_URL}/google/callback?token=${token || ""}&access_token=${googleAccessToken || ""}&refresh_token=${googleRefreshToken || ""}`
         )
-
-        // testing purpose
-        // res.redirect(
-        //   `${FRONTEND_URL}?token=${token || ""}&access_token=${googleAccessToken || ""}&refresh_token=${googleRefreshToken || ""}`
-        // )
       } else {
         console.log(
           "in the google/callback the token condition fails now login open"
@@ -117,7 +94,7 @@ router.get(
   }
 )
 
-/* when microsoft button click it work*/
+/* when microsoft button click it work
 router.get("/microsoft", passport.authenticate("microsoft"))
 
 router.get(
@@ -136,5 +113,6 @@ router.get(
     res.redirect(`${FRONTEND_URL}/dashboard?token=${token}`)
   }
 )
+*/
 
 export const authRouter = router

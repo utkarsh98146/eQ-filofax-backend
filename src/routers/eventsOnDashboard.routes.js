@@ -17,7 +17,11 @@ router.get("/getAll-dashboard-event", verifyToken, getAllEventTypeOnDashboard) /
 
 router.get("/:id", getEventTypeOnDashboard) // get one event for dashboard
 
-router.put("/update-dashboard-event", verifyToken, updateEventTypeOnDashboard) // update event for dashboard
+router.put(
+  "/update-dashboard-event/:id",
+  verifyToken,
+  updateEventTypeOnDashboard
+) // update event for dashboard
 
 router.delete(
   "/delete-dashboard-event/:id",

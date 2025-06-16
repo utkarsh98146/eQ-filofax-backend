@@ -1,5 +1,6 @@
 import db from "../models/index.model.js"
 import { checkUserThroughToken } from "../services/jwt_tokenServices.service.js"
+import path from "path"
 
 // get the profile data controller
 export const profileDetailsController = async (req, res) => {
@@ -58,15 +59,20 @@ export const updateProfileDetailsController = async (req, res) => {
 
     // console.log(`User details after fetching through token :`, user)
 
-    console.log(`The client data : , ${req.body}`)
+    // console.log("The client data", req.body)
 
-    const { name, email, phoneNumber, profileImageLink } = req.body // destructure the data from the request body
+    const { name, email, phoneNumber } = req.body // destructure the data from the request body
+    const profileImageLink = req.file
+      ? `/uploads/${req.file.filename}`
+      : (req.body.profileImageLink ?? user.profileImageLink)
 
-    user.name = name ?? user.name // update the user name
+    user.name = name ?? user.name // update the user n
     user.email = email ?? user.email // update the user email
     user.phoneNumber = phoneNumber ?? user.phoneNumber // update the user phone number
-    user.profileImageLink = profileImageLink ?? user.profileImageLink // update the user profile image link
+    user.profileImageLink = profileImageLink // update the user profile image link
+
     const updatedDetails = await user.save() // save the updated user details
+
     console.log(
       `Details name:${updatedDetails.name},phoneNumber : ${updatedDetails.phoneNumber}, email : ${updatedDetails.email}, profileImageLink : ${updatedDetails.profileImageLink}`
     )
@@ -104,6 +110,23 @@ export const deleteProfileDetailsController = async (req, res) => {
         success: false,
       })
     }
+
+    // Remove profile image from local storage if it exists and is not a placeholder
+    if (user.profileImageLink) {
+      // Remove 'filoFax-backend/' prefix if present
+      const relativeImagePath = user.profileImageLink.replace(
+        /^filoFax-backend[\/\\]?/,
+        ""
+      )
+      const imagePath = path.join(process.cwd(), relativeImagePath)
+      try {
+        await fs.unlink(imagePath)
+        console.log("Profile image deleted from local storage.")
+      } catch (err) {
+        console.log("Profile image not found or already deleted.")
+      }
+    }
+
     await user.destroy() // delete the user
     console.log(`User with id ${userId} deleted successfully`)
     res.status(200).json({

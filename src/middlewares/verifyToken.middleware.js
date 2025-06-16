@@ -22,43 +22,40 @@ export const verifyToken = async (req, res, next) => {
 
   const token = bearerHeader.split(" ")[1] // extracting token value from bearer header
 
-  const decodedData = decodeToken(token) // decoded the details from token
+  console.log("Extracted token:", token) // 🆕 ADD: Debug log
 
-  if (!decodedData || !decodedData.id) {
-    console.error("Decoded token is missing ")
+  try {
+    const decodedData = decodeToken(token) // decoded the details from token
+
+    if (!decodedData || (!decodedData.id && !decodedData.userId)) {
+      console.error("Decoded token is missing ")
+      return res
+        .status(403)
+        .json({ message: "Invalid or expired token", success: false })
+    }
+
+    const userId = decodedData.id || decodedData.userId
+    const { name, email } = decodedData
+    console.log(
+      `User id ${userId} from decode token and decode-Token `,
+      decodedData
+    )
+
+    if (!userId) {
+      return res.status(403).json({
+        message: "Invalid token payload",
+        success: false,
+      })
+    }
+
+    req.user = { userId, name, email }
+    console.log(`User Authenticated successfully.. User ID: ${userId}`)
+
+    next() // used to pass control to the next middleware function
+  } catch (error) {
+    console.log("JWT verification error : ", error.message)
     return res
       .status(403)
       .json({ message: "Invalid or expired token", success: false })
   }
-
-  const userId = decodedData.id
-  const { name, email } = decodedData
-  console.log(
-    `User id ${userId} from decode token and decode-Token `,
-    decodedData
-  )
-
-  if (!userId) {
-    return res.status(403).json({
-      message: "Invalid token payload",
-      success: false,
-    })
-  }
-
-  req.user = { userId, name, email }
-  console.log(`User Authenticated successfully.. User ID: ${userId}`)
-
-  next() // used to pass control to the next middleware function
-
-  /*
-    console.log(`Token value :${token}`)
-    if (!token) {
-      console.log("Token not extracted from client bearer header")
-    }
-
-    jwt.verify(token, process.env.JWT_SCRERT_KEY, (error, decoded) => {
-      if (error) return res.status(403).json({ message: "Un" })
-    })
-    */
-  // ends here
 }
